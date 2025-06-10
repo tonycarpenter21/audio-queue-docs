@@ -9,7 +9,7 @@ const config: Config = {
 
   // Set the production url of your site here
   url: 'https://tonycarpenter21.github.io',
-  baseUrl: '/',
+  baseUrl: '/audio-queue-docs/',
 
   // GitHub pages deployment config.
   organizationName: 'tonycarpenter21',

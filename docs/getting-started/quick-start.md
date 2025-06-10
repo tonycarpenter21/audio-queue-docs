@@ -259,7 +259,7 @@ Understand how channels, queues, and the audio lifecycle work
 ### 📖 **[API Reference](../api-reference/queue-management)**  
 Complete documentation of all available functions
 
-### 🎯 **[Examples](../examples/basic-usage)**
+### 🎯 **[Examples](../getting-started/basic-usage)**
 Real-world examples for gaming, podcasts, and interactive apps
 
 ### 🔥 **[Advanced Features](../advanced/volume-ducking)**
@@ -283,4 +283,4 @@ Volume ducking, priority queuing, and progress tracking
 - Use volume ducking instead of stopping/starting
 - Monitor memory usage with many audio files
 
-Ready to build something amazing? Check out our **[real-world examples](../examples/basic-usage)** for inspiration! 🚀 
+Ready to build something amazing? Check out our **[real-world examples](../getting-started/basic-usage)** for inspiration! 🚀 

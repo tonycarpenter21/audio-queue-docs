@@ -723,4 +723,4 @@ Now that you understand the event system, explore:
 - **[Audio Information](./audio-information.md)** - Get real-time audio data
 - **[Queue Management](./queue-management.md)** - Control audio queues
 - **[Volume Control](./volume-control.md)** - Manage audio levels
-- **[Examples](../examples/basic-usage)** - Real-world event handling patterns 
+- **[Examples](../getting-started/basic-usage)** - Real-world event handling patterns 

@@ -89,7 +89,7 @@ const config: Config = {
             },
             {
               label: 'Examples',
-              to: '/examples/basic-usage',
+              to: '/getting-started/basic-usage',
             },
           ],
         },

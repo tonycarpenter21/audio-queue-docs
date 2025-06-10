@@ -787,7 +787,7 @@ Now that you understand the event system, explore:
 - **[Audio Lifecycle](./audio-lifecycle.md)** - Complete audio playback flow with events
 - **[Performance & Memory](./performance-memory.md)** - Optimization strategies for events
 - **[API Reference](../api-reference/event-listeners.md)** - Detailed event documentation
-- **[Examples](../examples/basic-usage)** - Real-world event handling patterns
+- **[Examples](../getting-started/basic-usage)** - Real-world event handling patterns
 
 ### Real-time Queue Monitoring
 

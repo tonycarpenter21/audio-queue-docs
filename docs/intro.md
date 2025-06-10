@@ -58,7 +58,7 @@ Understanding channels, queues, and audio lifecycle
 ### 📚 **[API Reference](./api-reference/queue-management)**
 Complete function reference with examples
 
-### 🎯 **[Examples](./examples/basic-usage)**
+### 🎯 **[Examples](./getting-started/basic-usage)**
 Real-world use cases for games, podcasts, and apps
 
 ### 🔥 **[Advanced Features](./advanced/volume-ducking)**

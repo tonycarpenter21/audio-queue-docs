@@ -785,6 +785,6 @@ PerformanceBestPractices.logRecommendations();
 Now that you understand performance and memory management, explore:
 
 - **[API Reference](../api-reference/queue-management)** - Complete function documentation
-- **[Examples](../examples/basic-usage)** - Performance-optimized real-world examples  
+- **[Examples](../getting-started/basic-usage)** - Performance-optimized real-world examples
 - **[Advanced Features](../advanced/volume-ducking)** - Complex optimization scenarios
 - **[Migration & Help](../migration/troubleshooting)** - Upgrading and troubleshooting guides 

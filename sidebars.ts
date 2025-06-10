@@ -20,6 +20,7 @@ const sidebars: SidebarsConfig = {
       items: [
         'getting-started/installation',
         'getting-started/quick-start',
+        'getting-started/basic-usage',
         'getting-started/browser-compatibility',
       ],
       label: 'Getting Started',
@@ -46,13 +47,6 @@ const sidebars: SidebarsConfig = {
         'api-reference/types-interfaces'
       ],
       label: 'API Reference',
-      type: 'category'
-    },
-    {
-      items: [
-        'examples/basic-usage'
-      ],
-      label: 'Examples',
       type: 'category'
     },
     {

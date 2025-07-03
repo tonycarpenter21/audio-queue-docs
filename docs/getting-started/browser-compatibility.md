@@ -70,7 +70,7 @@ function isBrowserSupported(): boolean {
 if (isBrowserSupported()) {
   import('audio-channel-queue').then(({ queueAudio }) => {
     // Safe to use the library
-    queueAudio('./sounds/welcome.mp3');
+    await queueAudio('./sounds/welcome.mp3');
   });
 } else {
   // Show fallback or error message
@@ -127,7 +127,7 @@ function canAutoplay(): Promise<boolean> {
 canAutoplay().then(canPlay => {
   if (canPlay) {
     // Can start audio immediately
-    queueAudio('./sounds/welcome.mp3');
+    await queueAudio('./sounds/welcome.mp3');
   } else {
     // Need user interaction first
     createAudioStartButton();

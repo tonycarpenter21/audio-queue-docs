@@ -16,7 +16,7 @@ Modern browsers require user interaction before playing audio:
 ```typescript
 // Wait for user interaction
 document.addEventListener('click', () => {
-  queueAudio('sounds/music.mp3');
+  await queueAudio('sounds/music.mp3');
 }, { once: true });
 ```
 
@@ -25,10 +25,10 @@ Ensure audio files are accessible:
 
 ```typescript
 // ✅ Correct - relative to public directory
-queueAudio('sounds/music.mp3');
+await queueAudio('sounds/music.mp3');
 
 // ❌ Incorrect - absolute paths usually don't work
-queueAudio('/Users/myuser/sounds/music.mp3');
+await queueAudio('/Users/myuser/sounds/music.mp3');
 ```
 
 ## Performance Issues
@@ -39,12 +39,12 @@ Limit the number of active channels:
 ```typescript
 // ✅ Good - reasonable number of channels
 for (let i = 0; i < 4; i++) {
-  queueAudio('sound.mp3', i);
+  await queueAudio('sound.mp3', i);
 }
 
 // ❌ Avoid - too many channels can impact performance
 for (let i = 0; i < 100; i++) {
-  queueAudio('sound.mp3', i);
+  await queueAudio('sound.mp3', i);
 }
 ```
 

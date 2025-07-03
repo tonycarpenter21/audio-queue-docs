@@ -60,7 +60,7 @@ const {
 } = require('audio-channel-queue');
 
 // Start using immediately!
-queueAudio('./sounds/welcome.mp3');
+await queueAudio('./sounds/welcome.mp3');
 ```
 
 ### UMD (Browser Script Tag)

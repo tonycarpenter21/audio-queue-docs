@@ -36,20 +36,20 @@ await queueAudioPriority('./announcement.mp3', 1, { volume: 1.0 });
 
 // Common pattern: interrupt current audio
 await queueAudioPriority('./boss-music.mp3');
-stopCurrentAudioInChannel();  // Skip current, play boss music immediately
+await stopCurrentAudioInChannel();  // Skip current, play boss music immediately
 ```
 
 ### [stopCurrentAudioInChannel()](./queue-management#stopcurrentaudioinchannel)
 ```typescript
 // Skip to next in queue - channel 0 (default)
-stopCurrentAudioInChannel();
+await stopCurrentAudioInChannel();
 
 // Skip on specific channel
-stopCurrentAudioInChannel(1);
+await stopCurrentAudioInChannel(1);
 
 // Best practice: check if audio exists first
 if (getCurrentAudioInfo()) {
-  stopCurrentAudioInChannel();
+  await stopCurrentAudioInChannel();
 }
 ```
 
@@ -69,11 +69,11 @@ await queueAudio('./new-playlist/song1.mp3');
 ### [stopAllAudio()](./queue-management#stopallaudio)
 ```typescript
 // Nuclear option - stop everything
-stopAllAudio();
+await stopAllAudio();
 
 // Common: panic button
 document.getElementById('emergency-stop').onclick = () => {
-  stopAllAudio();
+  await stopAllAudio();
 };
 ```
 

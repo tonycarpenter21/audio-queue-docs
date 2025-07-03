@@ -629,7 +629,7 @@ class AudioPlayerUI {
       this.stateMachine.resumeAudio();
     } else if (state === AudioState.STOPPED) {
       // Maybe start playing from the beginning or load a default track
-      queueAudio('./music/default.mp3', this.channel);
+      await queueAudio('./music/default.mp3', this.channel);
     }
   }
   

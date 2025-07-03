@@ -119,7 +119,7 @@ class GameAudioManager {
     // Priority playback places this right after the current playing sound in the queue
     await queueAudioPriority('./voice/' + audioFile, GameChannels.VOICE);
     // This stops the current playing sound so the new priority sound begins to play
-    stopCurrentAudioInChannel();
+    await stopCurrentAudioInChannel();
   }
 }
 ```
@@ -179,9 +179,9 @@ class ChannelManager {
     // Stop all audio on channel
     if (channel === 0) {
       // Use default for channel 0
-      stopCurrentAudioInChannel();
+      await stopCurrentAudioInChannel();
     } else {
-      stopCurrentAudioInChannel(channel);
+      await stopCurrentAudioInChannel(channel);
     }
     
     // Clear queue

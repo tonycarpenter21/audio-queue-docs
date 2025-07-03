@@ -15,24 +15,18 @@ Add an audio file to the end of a queue and start playing it automatically.
 ### Syntax
 
 ```typescript
-queueAudio(audioFile: string, channelNumber?: number, options?: AudioOptions): Promise<void>
+await queueAudio(audioFile: string, channelNumber?: number = 0, options?: AudioQueueOptions): Promise<void>
 ```
 
-### Parameters
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `audioFile` | `string` | **Required** | Path or URL to the audio file |
-| `channelNumber` | `number` | `0` | Channel number (0, 1, 2, etc.) |
-| `options` | `AudioOptions` | `{}` | Configuration options |
-
-### AudioOptions
+### AudioQueueOptions
 
 ```typescript
-interface AudioOptions {
-  loop?: boolean;     // Loop the audio when it finishes
-  volume?: number;    // Initial volume (0-1 range)
-  priority?: boolean; // Same as queueAudioPriority if true
+interface AudioQueueOptions {
+  addToFront?: boolean;   // Whether to add this audio to the front of the queue (after currently playing)
+  loop?: boolean;         // Whether the audio should loop when it finishes
+  maxQueueSize?: number;  // Maximum number of items allowed in the queue (defaults to unlimited) 
+  priority?: boolean;     // TODO: @deprecated Use addToFront instead. Legacy support for priority queuing */
+  volume?: number;        // Volume level for this specific audio (0-1)
 }
 ```
 
@@ -47,6 +41,13 @@ await queueAudio('./sounds/welcome.mp3');
 
 // Play on specific channel
 await queueAudio('./music/background.mp3', 1);
+
+// Best practice: handle errors for user-triggered audio
+try {
+  await queueAudio('./sounds/click.mp3');
+} catch (error) {
+  console.warn('Audio failed to load:', error);
+}
 ```
 
 **With Options**
@@ -54,13 +55,17 @@ await queueAudio('./music/background.mp3', 1);
 // Background music with loop and volume
 await queueAudio('./music/ambient.mp3', 0, {
   loop: true,
-  volume: 0.3
+  volume: 0.3  // Best practice: keep background music at 30-50% volume
 });
 
 // Sound effect at full volume
 await queueAudio('./sfx/explosion.wav', 1, {
-  volume: 1.0
+  volume: 1.0  // Best practice: keep SFX at 80-100% for impact
 });
+
+// Best practice: use consistent channel assignments
+const CHANNELS = { BGM: 0, SFX: 1, VOICE: 2 };
+await queueAudio('./music/theme.mp3', CHANNELS.BGM, { loop: true });
 ```
 
 **Multiple Files in Queue**
@@ -69,12 +74,13 @@ await queueAudio('./sfx/explosion.wav', 1, {
 await queueAudio('./music/song1.mp3', 0);
 await queueAudio('./music/song2.mp3', 0);
 await queueAudio('./music/song3.mp3', 0);
+
+// Best practice: queue from array for dynamic playlists
+const playlist = ['song1.mp3', 'song2.mp3', 'song3.mp3'];
+for (const song of playlist) {
+  await queueAudio(`./music/${song}`);
+}
 ```
-
-### Return Value
-
-Returns a `Promise<void>` that resolves when the audio has been successfully added to the queue.
-
 ---
 
 ## queueAudioPriority()
@@ -84,28 +90,26 @@ Add an audio file to the **front** of the queue (plays after current audio finis
 ### Syntax
 
 ```typescript
-queueAudioPriority(audioFile: string, channelNumber?: number, options?: AudioOptions): Promise<void>
+await queueAudioPriority(audioFile: string, channelNumber?: number = 0, options?: AudioQueueOptions): Promise<void>
 ```
-
-### Parameters
-
-Same as `queueAudio()` - the only difference is queue position.
 
 ### Examples
 
 **Urgent Announcements**
 ```typescript
 // Queue some background music
-await queueAudio('./music/song1.mp3', 0);
-await queueAudio('./music/song2.mp3', 0);
-await queueAudio('./music/song3.mp3', 0);
+await queueAudio('./music/song1.mp3');
+await queueAudio('./music/song2.mp3');
+await queueAudio('./music/song3.mp3');
 
-// Emergency announcement - plays immediately!
-await queueAudioPriority('./voice/emergency.mp3', 0);
-// Stop the current sound so the priority announcement plays near immediately
-stopCurrentAudioInChannel(); // Note: defaults to channel 0
+// Emergency announcement - this queues immediately after the currently playing sound
+await queueAudioPriority('./voice/emergency.mp3');
+// Best practice: for immediate playback, stop current audio
+await stopCurrentAudioInChannel(); // Skip current, play priority audio now
 
-// The emergency message now plays right away instead of waiting
+// Pro tip: combine with volume ducking for to quiet other channel sounds for smooth interruptions
+setVolumeDucking({ priorityChannel: 1, duckingVolume: 0.1 });
+await queueAudioPriority('./alerts/urgent.mp3', 1);
 ```
 
 **Gaming Example**
@@ -114,8 +118,8 @@ stopCurrentAudioInChannel(); // Note: defaults to channel 0
 await queueAudio('./music/level-theme.mp3', 0, { loop: true });
 
 // Boss appears - urgent battle music needs to start now!
-await queueAudioPriority('./music/boss-battle.mp3', 0);
-stopCurrentAudioInChannel(); // Immediately stop level theme, start boss music
+await queueAudioPriority('./music/boss-battle.mp3');
+await stopCurrentAudioInChannel(); // Immediately stop level theme, start boss music
 
 // Boss music plays instantly instead of waiting for level theme to finish
 ```
@@ -129,16 +133,8 @@ Stop the currently playing audio in a specific channel and automatically start t
 ### Syntax
 
 ```typescript
-stopCurrentAudioInChannel(channelNumber?: number): void
+await stopCurrentAudioInChannel(channelNumber?: number = 0): Promise<void>
 ```
-
-### Parameters
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `channelNumber` | `number` | `0` | Channel to stop current audio |
-
-> **Note:** `channelNumber` is optional and defaults to `0`. Functions like `stopCurrentAudioInChannel()`, `stopAllAudioInChannel()`, and several others use channel 0 by default when no channel is specified.
 
 ### Examples
 
@@ -146,53 +142,23 @@ stopCurrentAudioInChannel(channelNumber?: number): void
 import { stopCurrentAudioInChannel } from 'audio-channel-queue';
 
 // Skip to next song on default channel (0)
-stopCurrentAudioInChannel();
+await stopCurrentAudioInChannel();
 
 // Skip to next song on specific channel
-stopCurrentAudioInChannel(1);
+await stopCurrentAudioInChannel(1);
+
+// Best practice: check if audio exists before stopping
+if (getCurrentAudioInfo()) {
+  await stopCurrentAudioInChannel();
+} else {
+  console.log('No audio playing to skip');
+}
 
 // Gaming example - immediate audio switching
 function handleBossFight(): void {
   // Stop current background music and play boss theme
-  stopCurrentAudioInChannel(); // Skip current song
-  queueAudioPriority('./music/boss-theme.mp3');
-}
-```
-
-### Real-world Usage
-
-```typescript
-class MusicPlayer {
-  private currentChannel: number = 0;
-
-  skipToNext(): void {
-    console.log('Skipping to next track...');
-    if (this.currentChannel === 0) {
-      stopCurrentAudioInChannel(); // Use default for channel 0
-    } else {
-      stopCurrentAudioInChannel(this.currentChannel);
-    }
-  }
-
-  skipToPrevious(): void {
-    // In a real app, you'd track the previous song
-    console.log('Going to previous track...');
-    if (this.currentChannel === 0) {
-      stopCurrentAudioInChannel();
-    } else {
-      stopCurrentAudioInChannel(this.currentChannel);
-    }
-    // Then queue the previous song with priority
-  }
-
-  emergencyStop(): void {
-    // Stop whatever is playing immediately
-    if (this.currentChannel === 0) {
-      stopCurrentAudioInChannel();
-    } else {
-      stopCurrentAudioInChannel(this.currentChannel);
-    }
-  }
+  await queueAudioPriority('./music/boss-theme.mp3');
+  await stopCurrentAudioInChannel(); // Skip current song
 }
 ```
 
@@ -205,25 +171,20 @@ Stop the current audio and clear all queued items in a specific channel.
 ### Syntax
 
 ```typescript
-stopAllAudioInChannel(channelNumber?: number): void
+stopAllAudioInChannel(channelNumber?: number = 0): void
 ```
 
-### Parameters
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `channelNumber` | `number` | `0` | Channel to clear completely |
 
 ### Examples
 
 ```typescript
 // Queue multiple items
-await queueAudio('./music/song1.mp3', 0);
-await queueAudio('./music/song2.mp3', 0);
-await queueAudio('./music/song3.mp3', 0);
+await queueAudio('./music/song1.mp3');
+await queueAudio('./music/song2.mp3');
+await queueAudio('./music/song3.mp3');
 
 // Stop everything on channel 0
-stopAllAudioInChannel(0);
+stopAllAudioInChannel();
 
 // Channel 0 is now silent and empty
 ```
@@ -234,7 +195,7 @@ function createEmergencyStopButton() {
   const button = document.createElement('button');
   button.textContent = '🛑 Emergency Stop';
   button.onclick = () => {
-    stopAllAudioInChannel(0); // Clear background music
+    stopAllAudioInChannel(); // Clear background music (channel 0)
     stopAllAudioInChannel(1); // Clear sound effects
   };
   return button;
@@ -250,47 +211,168 @@ Stop all audio across all channels. Nuclear option!
 ### Syntax
 
 ```typescript
-stopAllAudio(): void
+await stopAllAudio(): Promise<void>
 ```
-
-### Parameters
-
-None.
 
 ### Examples
 
 ```typescript
 // Start audio on multiple channels
-await queueAudio('./music/background.mp3', 0);
+await queueAudio('./music/background.mp3');
 await queueAudio('./sfx/ambient.wav', 1);
 await queueAudio('./voice/narrator.mp3', 2);
 
 // Stop everything everywhere
-stopAllAudio();
+await stopAllAudio();
 
 // All channels are now silent
 ```
 
-**Global Mute Implementation**
-```typescript
-let isMuted = false;
+---
 
-function toggleGlobalMute() {
-  if (isMuted) {
-    // Resume all channels
-    resumeAllChannels();
-    isMuted = false;
+## destroyChannel()
+
+Destroys a specific channel, clearing its queue and removing all event listeners.
+
+### Syntax
+
+```typescript
+await destroyChannel(channelNumber: number = 0): Promise<void>
+```
+
+### Examples
+
+```typescript
+import { destroyChannel } from 'audio-channel-queue';
+
+// Destroy a specific channel
+await destroyChannel(0);
+```
+---
+
+## destroyAllChannels()
+
+Destroys all channels, clearing all queues and removing all event listeners.
+
+### Syntax
+
+```typescript
+destroyAllChannels(): void
+```
+
+### Examples
+
+```typescript
+import { destroyAllChannels } from 'audio-channel-queue';
+
+// Complete cleanup
+destroyAllChannels();
+
+// App shutdown cleanup
+window.addEventListener('beforeunload', () => {
+  await stopAllAudio();
+  destroyAllChannels();
+});
+```
+---
+
+## setChannelQueueLimit()
+
+Sets the maximum number of items allowed in a channel's queue.
+
+### Syntax
+
+```typescript
+setChannelQueueLimit(channelNumber: number, maxSize?: number): void
+```
+
+### Examples
+
+```typescript
+import { setChannelQueueLimit } from 'audio-channel-queue';
+
+// Limit channel 0 to 10 items
+setChannelQueueLimit(0, 10);
+
+// Remove limit for channel 0 (unlimited queue)
+setChannelQueueLimit(0);
+
+// Prevent queue overflow
+setChannelQueueLimit(1, 5); // SFX channel 1 max 5 sounds
+```
+
+### Best Practice
+
+```typescript
+// Dynamic queue limits based on device
+function setAdaptiveQueueLimits() {
+  const isMobile = /mobile/i.test(navigator.userAgent);
+  
+  if (isMobile) {
+    setChannelQueueLimit(0, 5);  // Smaller queues on mobile
+    setChannelQueueLimit(1, 3);
   } else {
-    // Stop all audio
-    stopAllAudio();
-    isMuted = true;
+    setChannelQueueLimit(0, 20); // Larger queues on desktop
+    setChannelQueueLimit(1, 10);
   }
 }
 ```
 
 ---
 
-## 🎮 Real-World Usage Patterns
+## setQueueConfig() / getQueueConfig()
+
+Global configuration for queue behavior across all channels.
+
+### setQueueConfig()
+
+```typescript
+setQueueConfig(config: QueueConfig): void
+```
+
+### getQueueConfig()
+
+```typescript
+getQueueConfig(): QueueConfig
+```
+
+### QueueConfig Interface
+
+```typescript
+interface QueueConfig {
+  defaultMaxQueueSize?: number; // Default maximum queue size across all channels (defaults to unlimited)
+  dropOldestWhenFull?: boolean; // Whether to drop oldest items when queue is full (defaults to false - reject new items)
+  showQueueWarnings?: boolean;  // Whether to show warnings when queue limits are reached (defaults to true)
+}
+```
+
+### Examples
+
+```typescript
+import { setQueueConfig, getQueueConfig } from 'audio-channel-queue';
+
+// Set global configuration
+setQueueConfig({
+  defaultMaxQueueSize: 10,
+  dropOldestWhenFull: true,
+  showQueueWarnings: true,
+});
+
+// Get current configuration
+const config = getQueueConfig();
+console.log(`Max queue size: ${config.defaultMaxQueueSize}`);
+
+// Development vs production configs
+const isDev = process.env.NODE_ENV === 'development';
+setQueueConfig({
+  showQueueWarnings: isDev,
+  defaultMaxQueueSize: isDev ? 100 : 20
+});
+```
+
+---
+
+## Real-World Usage Patterns
 
 ### Gaming Audio Manager
 
@@ -320,13 +402,13 @@ class GameAudioManager {
 
   async playAnnouncement(message: string) {
     // Priority announcement that interrupts music briefly
-    await queueAudioPriority(`./voice/${message}.mp3`, 0);
+    await queueAudioPriority(`./voice/${message}.mp3`);
   }
 
   gameOver() {
     // Stop everything and play game over music
-    stopAllAudio();
-    queueAudio('./music/game-over.mp3', 0);
+    await stopAllAudio();
+    await queueAudio('./music/game-over.mp3');
   }
 }
 
@@ -337,39 +419,9 @@ await audioManager.playEffect('jump');
 await audioManager.playAnnouncement('checkpoint');
 ```
 
-### Interactive Presentation
-
-```typescript
-class PresentationAudio {
-  async startPresentation() {
-    // Background ambient sound
-    await queueAudio('./ambient/office.mp3', 1, {
-      loop: true,
-      volume: 0.1
-    });
-  }
-
-  async playSlideNarration(slideNumber: number) {
-    // Stop previous narration, start new one
-    stopAllAudioInChannel(0);
-    await queueAudio(`./narration/slide-${slideNumber}.mp3`, 0);
-  }
-
-  async playTransitionSound() {
-    // Quick transition effect
-    await queueAudio('./sfx/slide-transition.wav', 2);
-  }
-
-  endPresentation() {
-    // Fade out and stop
-    stopAllAudio();
-  }
-}
-```
-
 ## 🔗 Related Functions
 
-- **[Advanced Queue Manipulation](./advanced-queue-manipulation)** - Advanced queue editing, reordering, and item management
+- **[Advanced Queue Manipulation](../advanced/advanced-queue-manipulation)** - Advanced queue editing, reordering, and item management
 - **[Volume Control](./volume-control)** - Control playback volume
 - **[Pause/Resume](./pause-resume)** - Pause and resume playback
 - **[Event Listeners](./event-listeners)** - Monitor queue changes
@@ -377,4 +429,4 @@ class PresentationAudio {
 
 ---
 
-**Next:** Learn about **[Advanced Queue Manipulation](./advanced-queue-manipulation)** for precise queue control → 
+**Next:** Learn about **[Volume Control](./volume-control)** functions → 

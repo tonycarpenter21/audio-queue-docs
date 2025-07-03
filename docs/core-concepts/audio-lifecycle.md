@@ -492,7 +492,7 @@ class AudioLifecycleStateMachine {
   public stopAudio(): void {
     if (this.isActive()) {
       this.manualInterrupt = true; // Flag that this is a manual interruption
-      stopCurrentAudioInChannel(this.channel);
+      await stopCurrentAudioInChannel(this.channel);
       // State transition will happen via onAudioComplete event
     }
   }
@@ -500,7 +500,7 @@ class AudioLifecycleStateMachine {
   public skipToNext(): void {
     if (this.isActive()) {
       this.manualInterrupt = true; // Flag that this is a manual interruption
-      stopCurrentAudioInChannel(this.channel);
+      await stopCurrentAudioInChannel(this.channel);
       // State transition will happen via onAudioComplete event
     }
   }
@@ -508,7 +508,7 @@ class AudioLifecycleStateMachine {
   public retry(): boolean {
     if (this.state === AudioLifecycleState.ERROR && this.currentAudio) {
       // Try to queue the same audio again
-      queueAudio(this.currentAudio, this.channel, { addToFront: true });
+      await queueAudio(this.currentAudio, this.channel, { addToFront: true });
       return true;
     }
     return false;

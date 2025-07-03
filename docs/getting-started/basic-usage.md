@@ -28,8 +28,8 @@ Here's a minimal example to get you started:
 import { queueAudio, pauseChannel, resumeChannel, setChannelVolume } from 'audio-channel-queue';
 
 // Queue some audio files
-queueAudio('sounds/background-music.mp3', 0);
-queueAudio('sounds/sound-effect.mp3', 1);
+await queueAudio('sounds/background-music.mp3', 0);
+await queueAudio('sounds/sound-effect.mp3', 1);
 
 // Control playback
 pauseChannel(0);     // Pause background music
@@ -45,24 +45,24 @@ setChannelVolume(1, 0.8);  // 80% volume for channel 1
 ### Game Audio System
 ```typescript
 // Background music on channel 0
-queueAudio('music/level1-theme.mp3', 0, { loop: true });
+await queueAudio('music/level1-theme.mp3', 0, { loop: true });
 
 // Sound effects on channel 1
-queueAudio('sounds/jump.mp3', 1);
-queueAudio('sounds/collect-coin.mp3', 1);
+await queueAudio('sounds/jump.mp3', 1);
+await queueAudio('sounds/collect-coin.mp3', 1);
 
 // UI sounds on channel 2
-queueAudio('sounds/button-click.mp3', 2);
+await queueAudio('sounds/button-click.mp3', 2);
 ```
 
 ### Web Application
 ```typescript
 // Notification sounds
-queueAudio('notifications/message.mp3', 0);
-queueAudio('notifications/alert.mp3', 0);
+await queueAudio('notifications/message.mp3', 0);
+await queueAudio('notifications/alert.mp3', 0);
 
 // Background ambiance
-queueAudio('ambient/office-sounds.mp3', 1, { 
+await queueAudio('ambient/office-sounds.mp3', 1, { 
   loop: true,
   gain: 0.3 
 });
@@ -71,7 +71,7 @@ queueAudio('ambient/office-sounds.mp3', 1, {
 ### Interactive Media Player
 ```typescript
 // Main audio content
-queueAudio('audio/main-content.mp3', 0);
+await queueAudio('audio/main-content.mp3', 0);
 
 // Pause with smooth fade
 await setChannelVolume(0, 0, 1000, 'ease-out');

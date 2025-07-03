@@ -164,7 +164,7 @@ await queueAudio('./music/song3.mp3', 0);
 await queueAudioPriority('./voice/important-announcement.mp3', 0);
 
 // Stop current song and skip to next
-stopCurrentAudioInChannel(0);
+await stopCurrentAudioInChannel(0);
 
 // Clear entire queue for emergency
 // stopAllAudioInChannel(0);

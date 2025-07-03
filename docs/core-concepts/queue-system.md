@@ -151,7 +151,7 @@ class PlaylistManager {
   
   async skipToNext(): Promise<void> {
     // Stop current and play next
-    stopCurrentAudioInChannel(this.channel);
+    await stopCurrentAudioInChannel(this.channel);
     
     this.currentIndex++;
     if (this.currentIndex < this.playlist.length) {
@@ -161,7 +161,7 @@ class PlaylistManager {
   
   async skipToPrevious(): Promise<void> {
     this.currentIndex = Math.max(0, this.currentIndex - 1);
-    stopCurrentAudioInChannel(this.channel);
+    await stopCurrentAudioInChannel(this.channel);
     await queueAudioPriority(this.playlist[this.currentIndex], this.channel);
   }
   
@@ -243,8 +243,8 @@ class GameAudioQueue {
   
   async handleEmergency(): Promise<void> {
     // Stop everything and play alert
-    stopCurrentAudioInChannel(this.musicChannel);
-    stopCurrentAudioInChannel(this.sfxChannel);
+    await stopCurrentAudioInChannel(this.musicChannel);
+    await stopCurrentAudioInChannel(this.sfxChannel);
     await queueAudioPriority('./alerts/game-over.mp3', this.voiceChannel);
   }
 }

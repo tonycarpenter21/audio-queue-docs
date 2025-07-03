@@ -11,27 +11,31 @@ import {
   onAudioStart, 
   onAudioComplete, 
   onAudioProgress, 
-  onQueueChange 
+  onQueueChange,
+  offAudioStart,
+  offAudioComplete,
+  offAudioProgress,
+  offQueueChange
 } from 'audio-channel-queue';
 
 // React to audio starting
-onAudioStart(0, (info) => {
+const cleanupStart = onAudioStart(0, (info) => {
   console.log(`Started playing: ${info.fileName}`);
 });
 
 // React to audio completing
-onAudioComplete(0, (info) => {
+const cleanupComplete = onAudioComplete(0, (info) => {
   console.log(`Finished: ${info.fileName}`);
   console.log(`Remaining in queue: ${info.remainingInQueue}`);
 });
 
 // Track playback progress
-onAudioProgress(0, (info) => {
+const cleanupProgress = onAudioProgress(0, (info) => {
   console.log(`Progress: ${Math.round(info.progress * 100)}%`);
 });
 
 // Monitor queue changes
-onQueueChange(0, (snapshot) => {
+const cleanupQueue = onQueueChange(0, (snapshot) => {
   console.log(`Queue now has ${snapshot.totalItems} items`);
 });
 ```
@@ -83,38 +87,11 @@ import { onAudioComplete, AudioCompleteInfo } from 'audio-channel-queue';
 onAudioComplete(0, (info: AudioCompleteInfo) => {
   console.log('Audio completed:', {
     fileName: info.fileName,
-    playbackDuration: `${Math.round(info.playbackDuration / 1000)} seconds`,
+    channelNumber: info.channelNumber,
     remainingInQueue: info.remainingInQueue,
-    wasInterrupted: info.wasInterrupted
+    src: info.src
   });
-  
-  // Handle different completion scenarios
-  if (info.wasInterrupted) {
-    console.log('Playback was stopped early');
-    logInterruption(info.fileName, info.playbackDuration);
-  } else {
-    console.log('Playback completed naturally');
-    logSuccessfulPlayback(info.fileName);
-  }
-  
-  // Auto-play next or handle end of queue
-  if (info.remainingInQueue === 0) {
-    onQueueFinished();
-  }
 });
-
-function logInterruption(fileName: string, duration: number): void {
-  console.log(`${fileName} was interrupted after ${duration}ms`);
-}
-
-function logSuccessfulPlayback(fileName: string): void {
-  console.log(`${fileName} played to completion`);
-}
-
-function onQueueFinished(): void {
-  console.log('Queue is empty - playback session ended');
-  // Maybe start background music or show completion UI
-}
 ```
 
 ### Audio Progress Events
@@ -122,9 +99,9 @@ function onQueueFinished(): void {
 Fired continuously during audio playback for real-time progress tracking:
 
 ```typescript
-import { onAudioProgress, AudioProgressInfo } from 'audio-channel-queue';
+import { onAudioProgress, AudioInfo } from 'audio-channel-queue';
 
-onAudioProgress(0, (info: AudioProgressInfo) => {
+onAudioProgress(0, (info: AudioInfo) => {
   const percentage = Math.round(info.progress * 100);
   const currentSeconds = Math.floor(info.currentTime / 1000);
   const totalSeconds = Math.floor(info.duration / 1000);
@@ -185,9 +162,12 @@ import { onQueueChange, QueueSnapshot } from 'audio-channel-queue';
 
 onQueueChange(0, (snapshot: QueueSnapshot) => {
   console.log('Queue changed:', {
-    totalItems: snapshot.totalItems,
-    currentlyPlaying: snapshot.currentlyPlaying,
-    isChannelActive: snapshot.isChannelActive
+    snapshot.totalItems,
+    snapshot.currentIndex,
+    snapshot.isPaused,
+    snapshot.channelNumber,
+    snapshot.items,
+    snapshot.volume,
   });
   
   // Update queue display
@@ -197,7 +177,8 @@ onQueueChange(0, (snapshot: QueueSnapshot) => {
   if (snapshot.totalItems === 0) {
     onQueueEmpty();
   } else if (snapshot.totalItems === 1) {
-    onLastItem(snapshot.currentlyPlaying);
+    const currentItem = snapshot.items[0];
+    onLastItem(currentItem ? currentItem.fileName : null);
   } else if (snapshot.totalItems > 10) {
     onQueueOverloaded(snapshot.totalItems);
   }
@@ -294,12 +275,28 @@ class AudioEventManager {
     // Default implementation
   }
   
-  protected onAudioProgress(info: AudioProgressInfo): void {
+  protected onAudioProgress(info: AudioInfo): void {
     // Default implementation - called frequently
   }
   
   protected onQueueChanged(snapshot: QueueSnapshot): void {
     // Default implementation
+  }
+  
+  // Clean up all event listeners
+  cleanupAlternative(): void {
+    if (!this.isSetup) return;
+    
+    console.log(`Cleaning up all event listeners for channel ${this.channel} using off* methods`);
+    
+    // Remove all event listeners for this channel
+    offAudioStart(this.channel);
+    offAudioComplete(this.channel);
+    offAudioProgress(this.channel);
+    offQueueChange(this.channel);
+    
+    this.cleanupFunctions = [];
+    this.isSetup = false;
   }
 }
 
@@ -314,9 +311,7 @@ class GameAudioEventManager extends AudioEventManager {
   }
   
   protected onAudioCompleted(info: AudioCompleteInfo): void {
-    if (info.wasInterrupted) {
-      console.log('Game audio was interrupted - might be important dialog');
-    }
+    console.log(`Game audio completed: ${info.fileName} on channel ${info.channelNumber}`);
     
     this.logGameAudioEvent('complete', info.fileName);
   }
@@ -351,26 +346,27 @@ class MultiChannelEventCoordinator {
   
   private setupVoiceDucking(): void {
     // Duck music and SFX when voice starts
-    onAudioStart(this.voiceChannel, () => {
+    onAudioStart(this.voiceChannel, (info) => {
       console.log('Voice started - ducking other channels');
-      duckChannelVolume(this.musicChannel, 0.2);
-      duckChannelVolume(this.sfxChannel, 0.3);
+      // Use the proper ducking API instead of individual channel adjustments
+      setVolumeDucking({
+        priorityChannel: this.voiceChannel,
+        priorityVolume: 1.0,
+        duckingVolume: 0.2
+      });
     });
-    
-    // Restore volume when voice ends
-    onAudioComplete(this.voiceChannel, () => {
+
+    // Restore volumes when voice ends
+    onAudioComplete(this.voiceChannel, (info) => {
       console.log('Voice ended - restoring channel volumes');
-      restoreChannelVolume(this.musicChannel);
-      restoreChannelVolume(this.sfxChannel);
+      // No need to manually restore - ducking system handles this automatically
     });
   }
   
   private setupMusicTransitions(): void {
     onAudioComplete(this.musicChannel, (info) => {
-      if (!info.wasInterrupted) {
-        console.log('Music track completed naturally');
-        this.considerNextTrack();
-      }
+      console.log('Music track completed');
+      this.considerNextTrack();
     });
   }
   
@@ -392,6 +388,30 @@ class MultiChannelEventCoordinator {
     // Logic to limit SFX queue
     console.log('Throttling SFX to prevent overload');
   }
+  
+  // Clean up all event listeners
+  cleanupAlternative(): void {
+    console.log('Cleaning up all cross-channel event handlers using off* methods');
+    
+    // Remove all event listeners for all channels
+    offAudioStart(this.musicChannel);
+    offAudioStart(this.sfxChannel);
+    offAudioStart(this.voiceChannel);
+    
+    offAudioComplete(this.musicChannel);
+    offAudioComplete(this.sfxChannel);
+    offAudioComplete(this.voiceChannel);
+    
+    offAudioProgress(this.musicChannel);
+    offAudioProgress(this.sfxChannel);
+    offAudioProgress(this.voiceChannel);
+    
+    offQueueChange(this.musicChannel);
+    offQueueChange(this.sfxChannel);
+    offQueueChange(this.voiceChannel);
+    
+    this.cleanupFunctions = [];
+  }
 }
 ```
 
@@ -401,7 +421,7 @@ Use events to drive complex state machines:
 
 ```typescript
 enum AudioState {
-  IDLE = 'idle',
+  STOPPED = 'stopped',
   LOADING = 'loading',
   PLAYING = 'playing',
   PAUSED = 'paused',
@@ -409,7 +429,7 @@ enum AudioState {
 }
 
 class AudioStateMachine {
-  private state: AudioState = AudioState.IDLE;
+  private state: AudioState = AudioState.STOPPED;
   private channel: number;
   
   constructor(channel: number = 0) {
@@ -426,7 +446,7 @@ class AudioStateMachine {
       if (info.remainingInQueue > 0) {
         this.transitionTo(AudioState.LOADING);
       } else {
-        this.transitionTo(AudioState.IDLE);
+        this.transitionTo(AudioState.STOPPED);
       }
     });
     
@@ -437,6 +457,35 @@ class AudioStateMachine {
         }
       }
     });
+
+    // Listen for pause events
+    onQueueChange(this.channel, (snapshot) => {
+      const info = getCurrentAudioInfo(this.channel);
+      
+      // If there's audio in the queue but it's paused
+      if (snapshot.totalItems > 0 && snapshot.isPaused) {
+        this.transitionTo(AudioState.PAUSED);
+      } 
+      // If there was a pause but now we're playing again
+      else if (this.state === AudioState.PAUSED && snapshot.totalItems > 0 && !snapshot.isPaused) {
+        this.transitionTo(AudioState.PLAYING);
+      }
+    });
+  }
+  
+  // Public methods to control audio state
+  pauseAudio(): void {
+    if (this.state === AudioState.PLAYING) {
+      pauseChannel(this.channel);
+      // State will be updated via the onQueueChange handler
+    }
+  }
+  
+  resumeAudio(): void {
+    if (this.state === AudioState.PAUSED) {
+      resumeChannel(this.channel);
+      // State will be updated via the onQueueChange handler
+    }
   }
   
   private transitionTo(newState: AudioState): void {
@@ -447,11 +496,14 @@ class AudioStateMachine {
     
     // Handle state-specific logic
     switch (newState) {
-      case AudioState.IDLE:
-        this.onIdle();
+      case AudioState.STOPPED:
+        this.onStopped();
         break;
       case AudioState.PLAYING:
         this.onPlaying();
+        break;
+      case AudioState.PAUSED:
+        this.onPaused();
         break;
       case AudioState.COMPLETING:
         this.onCompleting();
@@ -459,14 +511,19 @@ class AudioStateMachine {
     }
   }
   
-  private onIdle(): void {
-    console.log('Audio system is idle');
+  private onStopped(): void {
+    console.log('Audio system is stopped');
     // Maybe start background music
   }
   
   private onPlaying(): void {
     console.log('Audio is playing');
     // Update UI to show play state
+  }
+  
+  private onPaused(): void {
+    console.log('Audio is paused');
+    // Update UI to show pause state
   }
   
   private onCompleting(): void {
@@ -477,7 +534,122 @@ class AudioStateMachine {
   getCurrentState(): AudioState {
     return this.state;
   }
+
+  getDisplayState(): string {
+    const info = getCurrentAudioInfo(this.channel);
+    if (!info) return 'Stopped';
+    
+    return info.isPlaying ? 'Playing' : info.isPaused ? 'Paused' : 'Stopped';
+  }
 }
+
+// Usage example
+const audioMachine = new AudioStateMachine(0);
+await queueAudio('./music/track1.mp3', 0);
+
+// Later, pause the audio
+audioMachine.pauseAudio();
+console.log(`Current state: ${audioMachine.getDisplayState()}`); // "Paused"
+
+// Resume playback
+audioMachine.resumeAudio();
+console.log(`Current state: ${audioMachine.getDisplayState()}`); // "Playing"
+
+// Real-world example: Audio Player UI
+class AudioPlayerUI {
+  private stateMachine: AudioStateMachine;
+  private channel: number;
+  
+  constructor(channel: number = 0) {
+    this.channel = channel;
+    this.stateMachine = new AudioStateMachine(channel);
+    this.setupUI();
+  }
+  
+  private setupUI(): void {
+    // Update UI based on state changes
+    onQueueChange(this.channel, () => {
+      this.updateUIControls();
+    });
+    
+    onAudioProgress(this.channel, (info) => {
+      this.updateProgressBar(info.progress);
+    });
+  }
+  
+  private updateUIControls(): void {
+    const state = this.stateMachine.getCurrentState();
+    const displayState = this.stateMachine.getDisplayState();
+    
+    console.log(`Updating UI for state: ${displayState}`);
+    
+    // Update play/pause button
+    const playPauseButton = document.getElementById('playPauseButton');
+    if (playPauseButton) {
+      if (state === AudioState.PLAYING) {
+        playPauseButton.innerHTML = '⏸️'; // Pause icon
+        playPauseButton.setAttribute('aria-label', 'Pause');
+      } else if (state === AudioState.PAUSED) {
+        playPauseButton.innerHTML = '▶️'; // Play icon
+        playPauseButton.setAttribute('aria-label', 'Play');
+      } else {
+        playPauseButton.innerHTML = '▶️'; // Play icon
+        playPauseButton.setAttribute('aria-label', 'Play');
+        playPauseButton.disabled = state === AudioState.STOPPED;
+      }
+    }
+    
+    // Update status text
+    const statusElement = document.getElementById('playerStatus');
+    if (statusElement) {
+      statusElement.textContent = displayState;
+      
+      // Add appropriate status class
+      statusElement.className = 'status';
+      statusElement.classList.add(`status-${state.toLowerCase()}`);
+    }
+  }
+  
+  private updateProgressBar(progress: number): void {
+    const progressBar = document.getElementById('progressBar');
+    if (progressBar) {
+      const percent = Math.round(progress * 100);
+      progressBar.style.width = `${percent}%`;
+      progressBar.setAttribute('aria-valuenow', percent.toString());
+    }
+  }
+  
+  // Public UI event handlers
+  handlePlayPauseClick(): void {
+    const state = this.stateMachine.getCurrentState();
+    
+    if (state === AudioState.PLAYING) {
+      this.stateMachine.pauseAudio();
+    } else if (state === AudioState.PAUSED) {
+      this.stateMachine.resumeAudio();
+    } else if (state === AudioState.STOPPED) {
+      // Maybe start playing from the beginning or load a default track
+      queueAudio('./music/default.mp3', this.channel);
+    }
+  }
+  
+  handleStopClick(): void {
+    stopAllAudioInChannel(this.channel);
+    // State machine will update via events
+  }
+}
+
+// Usage
+const playerUI = new AudioPlayerUI(0);
+
+// Connect to DOM events
+document.getElementById('playPauseButton')?.addEventListener('click', () => {
+  playerUI.handlePlayPauseClick();
+});
+
+document.getElementById('stopButton')?.addEventListener('click', () => {
+  playerUI.handleStopClick();
+});
 ```
 
 ## Advanced Event Patterns
@@ -531,7 +703,6 @@ class AudioEventAggregator {
     starts: number;
     completions: number;
     queueChanges: number;
-    avgPlaybackDuration: number;
   } {
     const since = Date.now() - periodMs;
     const recentEvents = this.getEventsSince(since);
@@ -540,16 +711,7 @@ class AudioEventAggregator {
     const completions = recentEvents.filter(e => e.type === 'audioComplete').length;
     const queueChanges = recentEvents.filter(e => e.type === 'queueChange').length;
     
-    // Calculate average playback duration
-    const durations = recentEvents
-      .filter(e => e.type === 'audioComplete')
-      .map(e => e.data.playbackDuration);
-    
-    const avgPlaybackDuration = durations.length > 0 
-      ? durations.reduce((a, b) => a + b, 0) / durations.length 
-      : 0;
-    
-    return { starts, completions, queueChanges, avgPlaybackDuration };
+    return { starts, completions, queueChanges };
   }
 }
 ```
@@ -559,7 +721,7 @@ class AudioEventAggregator {
 ```typescript
 class AudioAnalytics {
   private sessionStart: number = Date.now();
-  private playbackStats: Map<string, { count: number; totalDuration: number }> = new Map();
+  private playbackStats: Map<string, { count: number; completions: number }> = new Map();
   
   constructor() {
     this.setupAnalytics();
@@ -589,24 +751,20 @@ class AudioAnalytics {
   }
   
   private trackAudioComplete(info: AudioCompleteInfo): void {
-    console.log(`📊 Analytics: Completed ${info.fileName} (${info.playbackDuration}ms)`);
+    console.log(`📊 Analytics: Completed ${info.fileName}`);
     
-    // Update duration stats
+    // Update completion stats
     const stats = this.playbackStats.get(info.fileName);
     if (stats) {
-      stats.totalDuration += info.playbackDuration;
+      stats.completions = (stats.completions || 0) + 1;
       this.playbackStats.set(info.fileName, stats);
     }
     
-    // Track completion rate
-    if (!info.wasInterrupted) {
-      console.log(`✅ ${info.fileName} played to completion`);
-    } else {
-      console.log(`⏹️ ${info.fileName} was interrupted`);
-    }
+    // Track remaining queue
+    console.log(`📊 ${info.fileName} completed. ${info.remainingInQueue} items remaining in queue.`);
   }
   
-  private trackProgress(info: AudioProgressInfo): void {
+  private trackProgress(info: AudioInfo): void {
     // Track milestone progress (only log once per milestone)
     const milestones = [0.25, 0.5, 0.75];
     for (const milestone of milestones) {
@@ -620,28 +778,28 @@ class AudioAnalytics {
     sessionDuration: number;
     filesPlayed: string[];
     mostPlayedFile: string | null;
-    totalPlaybackTime: number;
+    totalCompletions: number;
   } {
     const sessionDuration = Date.now() - this.sessionStart;
     const filesPlayed = Array.from(this.playbackStats.keys());
     
     let mostPlayedFile: string | null = null;
     let maxCount = 0;
-    let totalPlaybackTime = 0;
+    let totalCompletions = 0;
     
     for (const [fileName, stats] of this.playbackStats) {
       if (stats.count > maxCount) {
         maxCount = stats.count;
         mostPlayedFile = fileName;
       }
-      totalPlaybackTime += stats.totalDuration;
+      totalCompletions += stats.completions || 0;
     }
     
     return {
       sessionDuration,
       filesPlayed,
       mostPlayedFile,
-      totalPlaybackTime
+      totalCompletions
     };
   }
 }
@@ -682,16 +840,32 @@ class EventHandlerManager {
     }
     
     this.cleanupFunctions.push(cleanup);
+    this.channels.add(channel);
   }
   
   removeAllEventHandlers(): void {
-    console.log(`Cleaning up ${this.cleanupFunctions.length} event handlers`);
-    
-    for (const cleanup of this.cleanupFunctions) {
-      cleanup();
+    console.log(`Cleaning up event handlers for ${this.channels.size} channels`);
+
+    for (const channel of this.channels) {
+      offAudioStart(channel);
+      offAudioComplete(channel);
+      offAudioProgress(channel);
+      offQueueChange(channel);
     }
     
     this.cleanupFunctions = [];
+  }
+  
+  removeChannelEventHandlers(channel: number): void {
+    console.log(`Removing all event handlers for channel ${channel}`);
+    
+    // Remove all event handlers for a specific channel
+    offAudioStart(channel);
+    offAudioComplete(channel);
+    offAudioProgress(channel);
+    offQueueChange(channel);
+    
+    this.channels.delete(channel);
   }
   
   getHandlerCount(): number {
@@ -711,9 +885,16 @@ eventManager.addEventHandler(0, 'complete', (info) => {
   console.log(`Completed: ${info.fileName}`);
 });
 
+eventManager.addEventHandler(1, 'start', (info) => {
+  console.log(`Channel 1 started: ${info.fileName}`);
+});
+
 // Later, clean up when component unmounts or page unloads
 window.addEventListener('beforeunload', () => {
   eventManager.removeAllEventHandlers();
+
+  // OR Remove handlers for a specific channel
+  // eventManager.removeChannelEventHandlers(0);
 });
 ```
 
@@ -725,9 +906,15 @@ Handle high-frequency events efficiently:
 class PerformantEventHandler {
   private lastProgressUpdate: number = 0;
   private progressThrottle: number = 100; // Update every 100ms max
+  private channel: number;
   
-  setupOptimizedEventHandlers(channel: number): void {
-    // Standard frequency events
+  constructor(channel: number = 0) {
+    this.channel = channel;
+  }
+  
+  setupOptimizedEventHandlers(): void {
+    const channel = this.channel;
+    
     onAudioStart(channel, (info) => {
       this.handleAudioStart(info);
     });
@@ -736,7 +923,6 @@ class PerformantEventHandler {
       this.handleAudioComplete(info);
     });
     
-    // Throttled high-frequency events
     onAudioProgress(channel, (info) => {
       this.handleThrottledProgress(info);
     });
@@ -756,7 +942,7 @@ class PerformantEventHandler {
     console.log(`Quick complete: ${info.fileName}`);
   }
   
-  private handleThrottledProgress(info: AudioProgressInfo): void {
+  private handleThrottledProgress(info: AudioInfo): void {
     const now = Date.now();
     
     if (now - this.lastProgressUpdate >= this.progressThrottle) {
@@ -767,8 +953,7 @@ class PerformantEventHandler {
     }
   }
   
-  private updateProgressUI(info: AudioProgressInfo): void {
-    // Expensive UI updates only when throttled
+  private updateProgressUI(info: AudioInfo): void {
     const percentage = Math.round(info.progress * 100);
     console.log(`Progress: ${percentage}%`);
   }
@@ -777,7 +962,80 @@ class PerformantEventHandler {
     // Queue changes are less frequent but important
     console.log(`Queue: ${snapshot.totalItems} items`);
   }
+  
+  cleanup(): void {
+    console.log(`Cleaning up event handlers for channel ${this.channel}`);
+    
+    // Remove all event handlers for this channel
+    offAudioStart(this.channel);
+    offAudioComplete(this.channel);
+    offAudioProgress(this.channel);
+    offQueueChange(this.channel);
+  }
 }
+
+// Usage
+const handler = new PerformantEventHandler(0);
+handler.setupOptimizedEventHandlers();
+
+// Later, when done with this handler
+handler.cleanup();
+```
+
+## Event Listener Removal
+
+All event listeners can be removed using corresponding "off" methods. This is important for cleaning up event handlers when components unmount or to prevent memory leaks.
+
+### Removing Audio Start Listeners
+
+```typescript
+import { onAudioStart, offAudioStart } from 'audio-channel-queue';
+
+// Add listener
+const cleanup = onAudioStart(0, (info) => {
+  console.log(`Started playing: ${info.fileName}`);
+});
+
+offAudioStart(0); // Remove all start listeners for channel 0
+```
+
+### Removing Audio Complete Listeners
+
+```typescript
+import { onAudioComplete, offAudioComplete } from 'audio-channel-queue';
+
+// Add listener
+const cleanup = onAudioComplete(0, (info) => {
+  console.log(`Finished playing: ${info.fileName}`);
+});
+
+offAudioComplete(0); // Remove all complete listeners for channel 0
+```
+
+### Removing Audio Progress Listeners
+
+```typescript
+import { onAudioProgress, offAudioProgress } from 'audio-channel-queue';
+
+// Add listener
+const cleanup = onAudioProgress(0, (info) => {
+  updateProgressBar(info.progress);
+});
+
+offAudioProgress(0); // Remove all progress listeners for channel 0
+```
+
+### Removing Queue Change Listeners
+
+```typescript
+import { onQueueChange, offQueueChange } from 'audio-channel-queue';
+
+// Add listener
+const cleanup = onQueueChange(0, (snapshot) => {
+  updateQueueUI(snapshot);
+});
+
+offQueueChange(0); // Remove all queue change listeners for channel 0
 ```
 
 ## Next Steps
@@ -788,249 +1046,3 @@ Now that you understand the event system, explore:
 - **[Performance & Memory](./performance-memory.md)** - Optimization strategies for events
 - **[API Reference](../api-reference/event-listeners.md)** - Detailed event documentation
 - **[Examples](../getting-started/basic-usage)** - Real-world event handling patterns
-
-### Real-time Queue Monitoring
-
-```typescript
-import { onQueueChange } from 'audio-channel-queue';
-
-class QueueMonitor {
-  setupQueueTracking(channel: number): void {
-    onQueueChange(channel, (snapshot) => {
-      console.log(`Queue changed on channel ${channel}:`);
-      console.log(`- Items: ${snapshot.totalItems}`);
-      console.log(`- Playing: ${snapshot.currentlyPlaying}`);
-      
-      // React to queue events
-      if (snapshot.totalItems === 0) {
-        this.onQueueEmpty(channel);
-      } else if (snapshot.totalItems > 10) {
-        this.onQueueOverloaded(channel);
-      }
-    });
-  }
-  
-  onQueueEmpty(channel: number): void {
-    console.log(`Channel ${channel} queue is empty - maybe start background music?`);
-  }
-  
-  onQueueOverloaded(channel: number): void {
-    console.log(`Channel ${channel} queue is getting long - consider optimization`);
-  }
-}
-```
-
-### Playlist Management
-
-```typescript
-class PlaylistManager {
-  private playlist: string[] = [];
-  private currentIndex: number = 0;
-  private channel: number = 0;
-  
-  constructor(channel: number = 0) {
-    this.channel = channel;
-    this.setupEventHandlers();
-  }
-  
-  loadPlaylist(audioFiles: string[]): void {
-    this.playlist = [...audioFiles];
-    this.currentIndex = 0;
-  }
-  
-  async startPlaylist(): Promise<void> {
-    if (this.playlist.length === 0) return;
-    
-    // Queue all tracks
-    for (const track of this.playlist) {
-      if (this.channel === 0) {
-        await queueAudio(track);
-      } else {
-        await queueAudio(track, this.channel);
-      }
-    }
-  }
-  
-  async skipToNext(): Promise<void> {
-    // Stop current and play next
-    if (this.channel === 0) {
-      stopCurrentAudioInChannel();
-    } else {
-      stopCurrentAudioInChannel(this.channel);
-    }
-    
-    this.currentIndex++;
-    if (this.currentIndex < this.playlist.length) {
-      if (this.channel === 0) {
-        await queueAudioPriority(this.playlist[this.currentIndex]);
-      } else {
-        await queueAudioPriority(this.playlist[this.currentIndex], this.channel);
-      }
-    }
-  }
-  
-  async skipToPrevious(): Promise<void> {
-    this.currentIndex = Math.max(0, this.currentIndex - 1);
-    if (this.channel === 0) {
-      stopCurrentAudioInChannel();
-      await queueAudioPriority(this.playlist[this.currentIndex]);
-    } else {
-      stopCurrentAudioInChannel(this.channel);
-      await queueAudioPriority(this.playlist[this.currentIndex], this.channel);
-    }
-  }
-  
-  private setupEventHandlers(): void {
-    onAudioComplete(this.channel, (info) => {
-      console.log(`Completed: ${info.fileName}`);
-      
-      // Auto-advance playlist
-      if (info.remainingInQueue === 0 && this.currentIndex < this.playlist.length - 1) {
-        this.skipToNext();
-      }
-    });
-  }
-}
-
-// Usage
-const musicPlayer = new PlaylistManager(0);
-musicPlayer.loadPlaylist([
-  './music/track1.mp3',
-  './music/track2.mp3', 
-  './music/track3.mp3'
-]);
-await musicPlayer.startPlaylist();
-```
-
-### Dynamic Content Insertion
-
-```typescript
-class DynamicContentManager {
-  private baseChannel: number = 0;
-  private adChannel: number = 1;
-  
-  async startMainContent(contentUrl: string): Promise<void> {
-    await queueAudio(contentUrl); // Using default channel 0
-  }
-  
-  async insertAd(adUrl: string, returnToContent: boolean = true): Promise<void> {
-    // Pause main content
-    pauseChannel(this.baseChannel);
-    
-    // Play ad on separate channel
-    await queueAudioPriority(adUrl, this.adChannel);
-    
-    if (returnToContent) {
-      // Resume main content when ad finishes
-      onAudioComplete(this.adChannel, () => {
-        resumeChannel(this.baseChannel);
-      });
-    }
-  }
-  
-  async insertBreakingNews(newsUrl: string): Promise<void> {
-    // Interrupt everything with priority news
-    await queueAudioPriority(newsUrl); // Using default channel 0
-  }
-}
-```
-
-### Cross-Channel Synchronization
-
-```typescript
-class SynchronizedQueueManager {
-  async syncChannelPlayback(channel1: number, channel2: number): Promise<void> {
-    // Start audio on both channels simultaneously
-    const promises = [
-      channel1 === 0 ? queueAudio('./audio/left-channel.mp3') : queueAudio('./audio/left-channel.mp3', channel1),
-      channel2 === 0 ? queueAudio('./audio/right-channel.mp3') : queueAudio('./audio/right-channel.mp3', channel2)
-    ];
-    
-    await Promise.all(promises);
-    console.log('Synchronized playback started on both channels');
-  }
-  
-  async createCallAndResponse(callTrack: string, responseTrack: string): Promise<void> {
-    // Play call on channel 0
-    await queueAudio(callTrack); // Using default channel 0
-    
-    // When call finishes, play response on channel 1
-    onAudioComplete(0, async () => {
-      await queueAudio(responseTrack, 1);
-    });
-  }
-  
-  async orchestrateMultiChannelSequence(): Promise<void> {
-    // Complex multi-channel coordination
-    
-    // Start background music (using default channel 0)
-    await queueAudio('./music/background.mp3', 0, { loop: true, volume: 0.3 });
-    
-    // Layer in sound effects
-    setTimeout(() => queueAudio('./sfx/wind.mp3', 1), 2000);
-    setTimeout(() => queueAudio('./sfx/birds.mp3', 2), 4000);
-    
-    // Add narration that ducks other audio
-    setTimeout(async () => {
-      // Duck background channels
-      setChannelVolume(0, 0.1);
-      setChannelVolume(1, 0.2);
-      setChannelVolume(2, 0.2);
-      
-      // Play narration
-      await queueAudio('./voice/narration.mp3', 3);
-      
-      // Restore volumes when narration ends
-      onAudioComplete(3, () => {
-        setChannelVolume(0, 0.3);
-        setChannelVolume(1, 1.0);
-        setChannelVolume(2, 1.0);
-      });
-    }, 6000);
-  }
-}
-```
-
-### Efficient Queue Operations
-
-```typescript
-class EfficientQueueManager {
-  private queueCache: Map<number, QueueSnapshot> = new Map();
-  private cacheTimeout: number = 1000; // 1 second cache
-  
-  getCachedQueueSnapshot(channel: number): QueueSnapshot {
-    const cached = this.queueCache.get(channel);
-    if (cached) {
-      return cached;
-    }
-    
-    const snapshot = channel === 0 ? getQueueSnapshot() : getQueueSnapshot(channel);
-    this.queueCache.set(channel, snapshot);
-    
-    // Clear cache after timeout
-    setTimeout(() => {
-      this.queueCache.delete(channel);
-    }, this.cacheTimeout);
-    
-    return snapshot;
-  }
-  
-  async batchQueueAudio(audioFiles: string[], channel: number): Promise<void> {
-    // Queue multiple files efficiently
-    const promises = audioFiles.map(file => 
-      channel === 0 ? queueAudio(file) : queueAudio(file, channel)
-    );
-    await Promise.all(promises);
-    console.log(`Batch queued ${audioFiles.length} files on channel ${channel}`);
-  }
-  
-  optimizeQueueSize(channel: number, maxItems: number = 5): void {
-    const snapshot = this.getCachedQueueSnapshot(channel);
-    
-    if (snapshot.totalItems > maxItems) {
-      console.warn(`Channel ${channel} queue has ${snapshot.totalItems} items, above optimal size of ${maxItems}`);
-      // Consider stopping current audio to clear queue
-    }
-  }
-}
-``` 

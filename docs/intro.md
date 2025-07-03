@@ -10,7 +10,7 @@ Welcome to **Audio Channel Queue** - the most comprehensive solution for managin
 
 ## 🌟 What is Audio Channel Queue?
 
-Audio Channel Queue is a powerful TypeScript library that enables you to manage multiple independent audio queues simultaneously. Perfect for games, podcasts, interactive applications, and any project requiring sophisticated audio control.
+Audio Channel Queue is a powerful TypeScript library that enables you to manage multiple independent audio queues simultaneously. Perfect for games, interactive applications, and any project requiring sophisticated audio control.
 
 ### ✨ Key Features
 
@@ -19,6 +19,7 @@ Audio Channel Queue is a powerful TypeScript library that enables you to manage 
 - 🔊 **Volume Control & Ducking** - Dynamic volume management with automatic background reduction
 - 🔄 **Loop Support** - Seamless audio looping for background music and ambient sounds
 - 🚨 **Priority Queueing** - Add urgent audio to the front of any queue
+- ✂️ **Advanced Queue Manipulation** - Remove, reorder, and swap queue items with precision
 - 📊 **Real-time Progress Tracking** - Comprehensive playback monitoring and metadata
 - 🎯 **Event-driven Architecture** - Extensive callback system for UI integration
 - 📘 **Full TypeScript Support** - Complete type definitions and IntelliSense
@@ -59,7 +60,7 @@ Understanding channels, queues, and audio lifecycle
 Complete function reference with examples
 
 ### 🎯 **[Examples](./getting-started/basic-usage)**
-Real-world use cases for games, podcasts, and apps
+Real-world use cases for games and interactive apps
 
 ### 🔥 **[Advanced Features](./advanced/volume-ducking)**
 Volume ducking, priority queuing, and progress tracking
@@ -77,21 +78,15 @@ await queueAudio('./music/background.mp3', 0, { loop: true, volume: 0.4 });
 // Sound effects (channel 1) 
 await queueAudio('./sfx/explosion.wav', 1);
 
-// Voice announcements (channel 2) - auto-ducks other audio
-setVolumeDucking({ priorityChannel: 2, duckingVolume: 0.1 });
-await queueAudioPriority('./voice/game-over.wav', 2);
-```
+// Set up voice announcements (channel 2) to duck all other audio
+setVolumeDucking({ 
+  priorityChannel: 2, 
+  priorityVolume: 1.0,
+  duckingVolume: 0.1 
+});
 
-**Podcast/Radio Apps**
-```typescript
-// Main content
-await queueAudio('./podcast/episode1.mp3', 0);
-
-// Ad breaks (priority insertion)
-await queueAudioPriority('./ads/sponsor.mp3', 0);
-
-// Background ambient (separate channel)
-await queueAudio('./ambient/coffee-shop.mp3', 1, { loop: true, volume: 0.1 });
+// When voice plays on channel 2, all other channels will reduce to 10% volume
+await queueAudio('./voice/game-over.wav', 2);
 ```
 
 **Interactive Applications**

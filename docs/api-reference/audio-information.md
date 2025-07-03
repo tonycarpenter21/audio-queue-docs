@@ -31,6 +31,8 @@ interface AudioInfo {
   isLooping: boolean;
   isPaused: boolean;
   isPlaying: boolean;
+  progress: number;
+  src: string;
   volume: number;
 }
 ```
@@ -47,9 +49,10 @@ await queueAudio('/audio/music.mp3');
 const audioInfo = getCurrentAudioInfo();
 if (audioInfo) {
   console.log(`Playing: ${audioInfo.fileName}`);
-  console.log(`Progress: ${audioInfo.currentTime}/${audioInfo.duration}ms`);
+  console.log(`Progress: ${Math.round(audioInfo.progress * 100)}% (${audioInfo.currentTime}/${audioInfo.duration}ms)`);
   console.log(`Volume: ${audioInfo.volume}`);
   console.log(`Paused: ${audioInfo.isPaused}`);
+  console.log(`Source: ${audioInfo.src}`);
 }
 
 // For channel 0 (default), you can omit the channel number
@@ -236,16 +239,20 @@ getQueueSnapshot(channelNumber?: number): QueueSnapshot
 
 ```typescript
 interface QueueSnapshot {
+  channelNumber: number;
   items: QueueItem[];
   totalItems: number;
   currentlyPlaying: string | null;
   isChannelActive: boolean;
+  isPaused: boolean;
+  volume: number;
 }
 
 interface QueueItem {
   fileName: string;
   duration: number;
   isCurrentlyPlaying: boolean;
+  isLooping: boolean;
   position: number;
 }
 ```
@@ -255,13 +262,13 @@ interface QueueItem {
 ```typescript
 import { getQueueSnapshot, queueAudio } from 'audio-channel-queue';
 
-// Queue multiple audio files
+// Queue multiple audio files on channel 0
 await queueAudio('/audio/track1.mp3');
 await queueAudio('/audio/track2.mp3');
 await queueAudio('/audio/track3.mp3');
 
-// Get queue snapshot (using default channel 0)
-const snapshot = getQueueSnapshot();
+// Get queue snapshot from channel 0 (using default fallback)
+const snapshot = getQueueSnapshot(); // Same as getQueueSnapshot(0)
 
 console.log(`Total items: ${snapshot.totalItems}`);
 console.log(`Currently playing: ${snapshot.currentlyPlaying}`);
@@ -271,6 +278,57 @@ snapshot.items.forEach((item, index) => {
   const status = item.isCurrentlyPlaying ? '▶️ Playing' : `#${item.position}`;
   console.log(`${status}: ${item.fileName} (${item.duration}ms)`);
 });
+
+// For other channels, you must specify the channel number
+const channel1Snapshot = getQueueSnapshot(1);
+const channel2Snapshot = getQueueSnapshot(2);
+```
+
+### Channel 0 Fallback Examples
+
+```typescript
+import { getQueueSnapshot, queueAudio } from 'audio-channel-queue';
+
+class QueueMonitor {
+  monitorDefaultChannel(): void {
+    // These are equivalent - both query channel 0
+    const snapshot1 = getQueueSnapshot();    // Uses channel 0 fallback
+    
+    console.log('Default channel queue:');
+    console.log(`- Fallback method: ${snapshot1.totalItems} items`);
+    console.log(`- Explicit method: ${snapshot2.totalItems} items`);
+    console.log(`- Results match: ${snapshot1.totalItems === snapshot2.totalItems}`);
+  }
+
+  monitorMultipleChannels(): void {
+    // Monitor channel 0 using fallback
+    const defaultChannel = getQueueSnapshot();
+    console.log(`Channel 0 (default): ${defaultChannel.totalItems} items`);
+    
+    // Monitor other channels explicitly
+    for (let channel = 1; channel <= 3; channel++) {
+      const snapshot = getQueueSnapshot(channel);
+      console.log(`Channel ${channel}: ${snapshot.totalItems} items`);
+    }
+  }
+
+  compareChannels(): void {
+    const channels = [
+      { number: 0, snapshot: getQueueSnapshot() },      // Using fallback
+      { number: 1, snapshot: getQueueSnapshot(1) },     // Must be explicit
+      { number: 2, snapshot: getQueueSnapshot(2) },     // Must be explicit
+    ];
+
+    channels.forEach(({ number, snapshot }) => {
+      console.log(`Channel ${number}:`);
+      console.log(`  - Active: ${snapshot.isChannelActive}`);
+      console.log(`  - Playing: ${snapshot.currentlyPlaying || 'Nothing'}`);
+      console.log(`  - Queue size: ${snapshot.totalItems}`);
+      console.log(`  - Paused: ${snapshot.isPaused}`);
+      console.log(`  - Volume: ${Math.round(snapshot.volume * 100)}%`);
+    });
+  }
+}
 ```
 
 ### Real-world Usage
@@ -363,6 +421,7 @@ class PlaylistViewer {
 ```typescript
 class QueueAnalyzer {
   analyzeQueue(channel: number = 0): void {
+    // Use channel 0 fallback for default channel, explicit for others
     const snapshot = channel === 0 ? getQueueSnapshot() : getQueueSnapshot(channel);
     
     console.log(`\n📊 Queue Analysis for Channel ${channel}:`);
@@ -401,7 +460,7 @@ class QueueAnalyzer {
 
   monitorQueueHealth(): void {
     setInterval(() => {
-      // Monitor default channel and channels 1-3
+      // Monitor default channel using fallback and channels 1-3 explicitly
       for (let channel = 0; channel < 4; channel++) {
         const snapshot = channel === 0 ? getQueueSnapshot() : getQueueSnapshot(channel);
         
@@ -475,4 +534,12 @@ class AudioPerformanceMonitor {
   getMetrics() {
     return { ...this.metrics };
   }
-} 
+}
+```
+
+## 🔗 Related Functions
+
+- **[Advanced Queue Manipulation](./advanced-queue-manipulation)** - Remove, reorder, and swap queue items
+- **[Queue Management](./queue-management)** - Basic queue operations
+- **[Event Listeners](./event-listeners)** - Monitor audio and queue events
+- **[Types & Interfaces](./types-interfaces)** - TypeScript interface definitions 

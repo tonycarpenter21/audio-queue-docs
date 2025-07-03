@@ -32,6 +32,8 @@ interface AudioInfo {
 | `isLooping` | `boolean` | Whether the audio is set to loop |
 | `isPaused` | `boolean` | Whether the audio is currently paused |
 | `isPlaying` | `boolean` | Whether the audio is currently playing |
+| `progress` | `number` | Playback progress as percentage (0.0 to 1.0) |
+| `src` | `string` | Source URL of the audio file |
 | `volume` | `number` | Current volume level (0.0 to 1.0) |
 
 #### Usage Examples
@@ -436,28 +438,11 @@ interface GameAudioConfig {
   };
 }
 
-interface PodcastConfig {
-  episode: {
-    channel: ChannelNumber;
-    volume: VolumeLevel;
-  };
-  ads: {
-    channel: ChannelNumber;
-    volume: VolumeLevel;
-    priority: boolean;
-  };
-}
-
-// Usage examples
+// Usage example
 const gameConfig: GameAudioConfig = {
   music: { channel: 0, volume: 0.4, loop: true },
   sfx: { channel: 1, volume: 0.8 },
   voice: { channel: 2, volume: 1.0, priority: true }
-};
-
-const podcastConfig: PodcastConfig = {
-  episode: { channel: 0, volume: 1.0 },
-  ads: { channel: 0, volume: 0.9, priority: true }
 };
 ```
 

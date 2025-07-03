@@ -423,6 +423,141 @@ class ProgressTracker {
 }
 ```
 
+## offAudioProgress
+
+### Syntax
+
+```typescript
+offAudioProgress(channelNumber?: number): void
+```
+
+### Parameters
+
+- `channelNumber` (number, optional): The channel number to remove listeners from (defaults to 0)
+
+### Examples
+
+```typescript
+import { onAudioProgress, offAudioProgress } from 'audio-channel-queue';
+
+// Setup progress listener
+onAudioProgress(0, (info) => {
+  console.log(`Progress: ${Math.round(info.progress * 100)}%`);
+});
+
+// Remove progress listener from channel 0 (using default fallback)
+offAudioProgress(); // Equivalent to offAudioProgress(0)
+
+// Remove progress listener from channel 1 (must be explicit)
+offAudioProgress(1);
+```
+
+### Channel 0 Fallback Behavior
+
+```typescript
+import { onAudioProgress, offAudioProgress } from 'audio-channel-queue';
+
+class ToggleableProgressTracker {
+  private isTracking: boolean = false;
+
+  startTracking(): void {
+    if (this.isTracking) return;
+    
+    // Setup progress tracking on default channel (0)
+    onAudioProgress(0, (info) => {
+      console.log(`Progress: ${Math.round(info.progress * 100)}%`);
+    });
+    
+    this.isTracking = true;
+    console.log('Progress tracking started');
+  }
+
+  stopTracking(): void {
+    if (!this.isTracking) return;
+    
+    // Remove progress tracking (using channel 0 fallback)
+    offAudioProgress(); // Same as offAudioProgress(0)
+    
+    this.isTracking = false;
+    console.log('Progress tracking stopped');
+  }
+
+  toggleTracking(): void {
+    if (this.isTracking) {
+      this.stopTracking();
+    } else {
+      this.startTracking();
+    }
+  }
+}
+
+// Usage
+const tracker = new ToggleableProgressTracker();
+tracker.startTracking();    // Start listening to progress
+tracker.stopTracking();     // Stop listening (uses channel 0 fallback)
+```
+
+### Real-world Usage
+
+```typescript
+class ConditionalProgressHandler {
+  private progressListeners: Set<number> = new Set();
+
+  enableProgressTracking(channels: number[]): void {
+    channels.forEach(channel => {
+      if (!this.progressListeners.has(channel)) {
+        onAudioProgress(channel, (info) => {
+          this.handleProgress(channel, info);
+        });
+        this.progressListeners.add(channel);
+      }
+    });
+  }
+
+  disableProgressTracking(channels?: number[]): void {
+    if (!channels) {
+      // Disable all progress tracking
+      this.progressListeners.forEach(channel => {
+        if (channel === 0) {
+          offAudioProgress(); // Using channel 0 fallback
+        } else {
+          offAudioProgress(channel);
+        }
+      });
+      this.progressListeners.clear();
+    } else {
+      // Disable specific channels
+      channels.forEach(channel => {
+        if (this.progressListeners.has(channel)) {
+          if (channel === 0) {
+            offAudioProgress(); // Using channel 0 fallback
+          } else {
+            offAudioProgress(channel);
+          }
+          this.progressListeners.delete(channel);
+        }
+      });
+    }
+  }
+
+  private handleProgress(channel: number, info: AudioProgressInfo): void {
+    console.log(`Channel ${channel} progress: ${Math.round(info.progress * 100)}%`);
+  }
+}
+
+// Usage examples
+const handler = new ConditionalProgressHandler();
+
+// Enable progress tracking for multiple channels
+handler.enableProgressTracking([0, 1, 2]);
+
+// Disable only channel 0 (using fallback)
+handler.disableProgressTracking([0]); // offAudioProgress() called internally
+
+// Disable all channels
+handler.disableProgressTracking(); // Clears all listeners
+```
+
 ## onQueueChange
 
 Listen for changes to the audio queue.
@@ -720,6 +855,7 @@ class AudioAnalytics {
 
 Now that you understand the event system, explore:
 
+- **[Advanced Queue Manipulation](./advanced-queue-manipulation.md)** - Precise queue control and monitoring
 - **[Audio Information](./audio-information.md)** - Get real-time audio data
 - **[Queue Management](./queue-management.md)** - Control audio queues
 - **[Volume Control](./volume-control.md)** - Manage audio levels

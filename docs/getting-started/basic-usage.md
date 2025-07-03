@@ -71,7 +71,7 @@ queueAudio('ambient/office-sounds.mp3', 1, {
 ### Interactive Media Player
 ```typescript
 // Main audio content
-queueAudio('podcast/episode-1.mp3', 0);
+queueAudio('audio/main-content.mp3', 0);
 
 // Pause with smooth fade
 await setChannelVolume(0, 0, 1000, 'ease-out');

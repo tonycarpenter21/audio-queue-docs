@@ -337,35 +337,6 @@ await audioManager.playEffect('jump');
 await audioManager.playAnnouncement('checkpoint');
 ```
 
-### Podcast App
-
-```typescript
-class PodcastPlayer {
-  async loadEpisode(episodeUrl: string) {
-    // Clear any previous episode
-    stopAllAudioInChannel(0);
-    
-    // Load new episode
-    await queueAudio(episodeUrl, 0);
-  }
-
-  async insertAd(adUrl: string) {
-    // Insert ad to play next (priority)
-    await queueAudioPriority(adUrl, 0);
-  }
-
-  skipCurrent() {
-    // Skip current segment (ad or chapter)
-    stopCurrentAudioInChannel(0);
-  }
-
-  stopEpisode() {
-    // Stop and clear episode
-    stopAllAudioInChannel(0);
-  }
-}
-```
-
 ### Interactive Presentation
 
 ```typescript
@@ -398,6 +369,7 @@ class PresentationAudio {
 
 ## 🔗 Related Functions
 
+- **[Advanced Queue Manipulation](./advanced-queue-manipulation)** - Advanced queue editing, reordering, and item management
 - **[Volume Control](./volume-control)** - Control playback volume
 - **[Pause/Resume](./pause-resume)** - Pause and resume playback
 - **[Event Listeners](./event-listeners)** - Monitor queue changes
@@ -405,4 +377,4 @@ class PresentationAudio {
 
 ---
 
-**Next:** Learn about **[Volume Control](./volume-control)** functions → 
+**Next:** Learn about **[Advanced Queue Manipulation](./advanced-queue-manipulation)** for precise queue control → 

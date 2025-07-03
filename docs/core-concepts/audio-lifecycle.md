@@ -36,8 +36,8 @@ async function demonstrateLifecycle(): Promise<void> {
   // 4. Audio completes
   onAudioComplete(0, (info) => {
     console.log(`4. Audio completed: ${info.fileName}`);
-    console.log(`   Played for: ${info.playbackDuration}ms`);
-    console.log(`   Was interrupted: ${info.wasInterrupted}`);
+    console.log(`   Channel: ${info.channelNumber}`);
+    console.log(`   Source: ${info.src}`);
     console.log(`   Remaining in queue: ${info.remainingInQueue}`);
   });
 }
@@ -64,8 +64,9 @@ class AudioLifecycleTracker {
     console.log('✓ track2.mp3 queued normally');
     
     // Priority queueing - interrupts current playback
-    await queueAudioPriority('./audio/urgent.mp3');
+    await queueAudioPriority('./audio/urgent.mp3'); // Places sound file in first queue spot behind currently playing sound
     console.log('✓ urgent.mp3 queued with priority');
+    await stopCurrentSound(); // This is what interrupts current playback
     
     // Check queue state after queueing
     const snapshot = getQueueSnapshot(); // Using default channel 0
@@ -91,12 +92,11 @@ class LoadingPhaseTracker {
     
     onAudioStart(0, (info) => {
       console.log(`✓ Audio loaded and ready: ${info.fileName}`);
-      console.log(`  Element created: ${info.audioElement.tagName}`);
-      console.log(`  Source set: ${info.audioElement.src}`);
+      console.log(`  Channel: ${info.channelNumber}`);
+      console.log(`  Source: ${info.src}`);
       console.log(`  Duration determined: ${info.duration}ms`);
-      console.log(`  Initial position: ${info.currentTime}ms`);
       
-      // Audio element is fully loaded and playback has started
+      // Audio is fully loaded and playback has started
       this.onAudioLoaded(info);
     });
   }
@@ -115,7 +115,7 @@ class LoadingPhaseTracker {
 During active playback, continuous progress events are fired:
 
 ```typescript
-import { onAudioProgress, AudioProgressInfo } from 'audio-channel-queue';
+import { onAudioProgress, AudioInfo } from 'audio-channel-queue';
 
 class PlaybackPhaseTracker {
   private milestones: Set<number> = new Set();
@@ -130,7 +130,7 @@ class PlaybackPhaseTracker {
     });
   }
   
-  private trackPlaybackProgress(info: AudioProgressInfo): void {
+  private trackPlaybackProgress(info: AudioInfo): void {
     // Continuous playback monitoring
     const percentage = Math.round(info.progress * 100);
     
@@ -142,7 +142,7 @@ class PlaybackPhaseTracker {
     }
   }
   
-  private checkMilestones(info: AudioProgressInfo): void {
+  private checkMilestones(info: AudioInfo): void {
     // Check for important milestones
     const progress = info.progress;
     
@@ -155,22 +155,22 @@ class PlaybackPhaseTracker {
     }
   }
   
-  private onEarlyPlayback(info: AudioProgressInfo): void {
+  private onEarlyPlayback(info: AudioInfo): void {
     console.log(`🎵 Early playback (10%): ${info.fileName}`);
     // Good time to start preloading next track
   }
   
-  private onMidpoint(info: AudioProgressInfo): void {
+  private onMidpoint(info: AudioInfo): void {
     console.log(`🎯 Midpoint reached (50%): ${info.fileName}`);
     // Analytics milestone, UI updates
   }
   
-  private onNearingEnd(info: AudioProgressInfo): void {
+  private onNearingEnd(info: AudioInfo): void {
     console.log(`🏁 Nearing end (90%): ${info.fileName}`);
     // Prepare for transition to next track
   }
   
-  private updateUI(info: AudioProgressInfo): void {
+  private updateUI(info: AudioInfo): void {
     // Update progress bar, time display, etc.
     const percentage = Math.round(info.progress * 100);
     // UI update logic here
@@ -197,31 +197,17 @@ class CompletionPhaseTracker {
   
   private analyzeCompletion(info: AudioCompleteInfo): void {
     console.log(`Completion analysis for: ${info.fileName}`);
-    console.log(`  Playback duration: ${info.playbackDuration}ms`);
-    console.log(`  Was interrupted: ${info.wasInterrupted}`);
+    console.log(`  Channel: ${info.channelNumber}`);
+    console.log(`  Source: ${info.src}`);
     console.log(`  Remaining in queue: ${info.remainingInQueue}`);
     
-    if (info.wasInterrupted) {
-      this.handleInterruption(info);
-    } else {
-      this.handleNaturalCompletion(info);
-    }
+    // Process completion
+    this.handleCompletion(info);
   }
   
-  private handleInterruption(info: AudioCompleteInfo): void {
-    console.log(`⏹️ Interrupted: ${info.fileName}`);
-    console.log(`   Played ${info.playbackDuration}ms before interruption`);
-    
-    // Log interruption reason
-    this.logInterruptionReason(info);
-    
-    // Update analytics
-    this.trackInterruption(info);
-  }
-  
-  private handleNaturalCompletion(info: AudioCompleteInfo): void {
-    console.log(`✅ Completed naturally: ${info.fileName}`);
-    console.log(`   Full playback duration: ${info.playbackDuration}ms`);
+  private handleCompletion(info: AudioCompleteInfo): void {
+    console.log(`✅ Completed: ${info.fileName}`);
+    console.log(`   Channel: ${info.channelNumber}`);
     
     // Update completion stats
     this.trackSuccessfulCompletion(info);
@@ -236,16 +222,6 @@ class CompletionPhaseTracker {
     } else {
       this.onMoreItemsInQueue(info.remainingInQueue);
     }
-  }
-  
-  private logInterruptionReason(info: AudioCompleteInfo): void {
-    // This is called when audio is stopped early
-    console.log(`Interruption logged for ${info.fileName}`);
-  }
-  
-  private trackInterruption(info: AudioCompleteInfo): void {
-    // Analytics tracking for interruptions
-    console.log(`Analytics: Interruption - ${info.fileName}`);
   }
   
   private trackSuccessfulCompletion(info: AudioCompleteInfo): void {
@@ -278,31 +254,50 @@ Here's a comprehensive state machine that tracks the entire audio lifecycle:
 enum AudioLifecycleState {
   IDLE = 'idle',
   QUEUED = 'queued',
-  LOADING = 'loading',
   PLAYING = 'playing',
   PAUSED = 'paused',
   COMPLETING = 'completing',
   COMPLETED = 'completed',
-  INTERRUPTED = 'interrupted'
+  INTERRUPTED = 'interrupted',
+  ERROR = 'error'
 }
 
 class AudioLifecycleStateMachine {
-  private state: AudioLifecycleState = AudioLifecycleState.IDLE;
-  private currentAudio: string | null = null;
-  private startTime: number = 0;
-  private channel: number;
+  protected channel: number;
+  protected currentAudio: string | null = null;
+  protected errorMessage: string | null = null;
+  protected manualInterrupt: boolean = false;
+  protected startTime: number = 0;
+  protected state: AudioLifecycleState = AudioLifecycleState.IDLE;
   
   constructor(channel: number = 0) {
+    // Validate channel number
+    if (channel < 0) {
+      throw new Error("Channel number must be non-negative");
+    }
+    
     this.channel = channel;
     this.setupLifecycleTracking();
   }
   
-  private setupLifecycleTracking(): void {
+  protected setupLifecycleTracking(): void {
     // Track queue changes to detect queuing
     onQueueChange(this.channel, (snapshot) => {
-      if (snapshot.totalItems > 0 && this.state === AudioLifecycleState.IDLE) {
-        this.transitionTo(AudioLifecycleState.QUEUED);
-      } else if (snapshot.totalItems === 0) {
+      if (snapshot.totalItems > 0) {
+        // Handle first item added to queue
+        if (this.state === AudioLifecycleState.IDLE) {
+          this.transitionTo(AudioLifecycleState.QUEUED);
+        }
+        
+        // Handle pause/resume state changes
+        if (snapshot.isPaused && this.state === AudioLifecycleState.PLAYING) {
+          this.transitionTo(AudioLifecycleState.PAUSED);
+        } else if (!snapshot.isPaused && this.state === AudioLifecycleState.PAUSED) {
+          this.transitionTo(AudioLifecycleState.PLAYING);
+        }
+      } else if (snapshot.totalItems === 0 && 
+                [AudioLifecycleState.COMPLETED, AudioLifecycleState.INTERRUPTED, AudioLifecycleState.ERROR].includes(this.state)) {
+        // Only transition to IDLE if we're in a terminal state and queue is empty
         this.transitionTo(AudioLifecycleState.IDLE);
       }
     });
@@ -312,6 +307,27 @@ class AudioLifecycleStateMachine {
       this.currentAudio = info.fileName;
       this.startTime = Date.now();
       this.transitionTo(AudioLifecycleState.PLAYING);
+      this.manualInterrupt = false; // Reset interrupt flag on new audio start
+    });
+    
+    // Track audio complete
+    onAudioComplete(this.channel, (info) => {
+      // Use our manual interrupt flag to determine if this was interrupted
+      const wasInterrupted = this.manualInterrupt;
+      
+      // Also consider it an interruption if it completes before reaching COMPLETING state
+      // but wasn't manually interrupted and didn't complete from PLAYING state
+      const unexpectedCompletion = !wasInterrupted && 
+                                   this.state !== AudioLifecycleState.COMPLETING &&
+                                   this.state !== AudioLifecycleState.PLAYING;
+      
+      if (wasInterrupted || unexpectedCompletion) {
+        this.transitionTo(AudioLifecycleState.INTERRUPTED);
+      } else {
+        this.transitionTo(AudioLifecycleState.COMPLETED);
+      }
+      
+      this.manualInterrupt = false; // Reset flag
     });
     
     // Track progress for state transitions
@@ -321,26 +337,14 @@ class AudioLifecycleStateMachine {
       }
     });
     
-    // Track completion
-    onAudioComplete(this.channel, (info) => {
-      if (info.wasInterrupted) {
-        this.transitionTo(AudioLifecycleState.INTERRUPTED);
-      } else {
-        this.transitionTo(AudioLifecycleState.COMPLETED);
-      }
-      
-      // Reset for next audio
-      setTimeout(() => {
-        if (info.remainingInQueue > 0) {
-          this.transitionTo(AudioLifecycleState.QUEUED);
-        } else {
-          this.transitionTo(AudioLifecycleState.IDLE);
-        }
-      }, 100);
+    // Track audio errors
+    onAudioError(this.channel, (errorInfo) => {
+      this.errorMessage = errorInfo.error.message;
+      this.transitionTo(AudioLifecycleState.ERROR);
     });
   }
   
-  private transitionTo(newState: AudioLifecycleState): void {
+  protected transitionTo(newState: AudioLifecycleState): void {
     const oldState = this.state;
     this.state = newState;
     
@@ -350,8 +354,8 @@ class AudioLifecycleStateMachine {
     this.handleStateEntry(newState, oldState);
   }
   
-  private handleStateEntry(state: AudioLifecycleState, previousState: AudioLifecycleState): void {
-    const elapsed = Date.now() - this.startTime;
+  protected handleStateEntry(state: AudioLifecycleState, previousState: AudioLifecycleState): void {
+    const elapsed = this.getElapsedTime();
     
     switch (state) {
       case AudioLifecycleState.IDLE:
@@ -369,6 +373,11 @@ class AudioLifecycleStateMachine {
         this.onPlaying();
         break;
         
+      case AudioLifecycleState.PAUSED:
+        console.log(`⏸️ Audio paused: ${this.currentAudio} (${elapsed}ms elapsed so far)`);
+        this.onPaused();
+        break;
+        
       case AudioLifecycleState.COMPLETING:
         console.log(`🏁 Audio completing: ${this.currentAudio} (${elapsed}ms elapsed)`);
         this.onCompleting();
@@ -383,60 +392,142 @@ class AudioLifecycleStateMachine {
         console.log(`⏹️ Audio interrupted: ${this.currentAudio} (${elapsed}ms elapsed)`);
         this.onInterrupted();
         break;
+        
+      case AudioLifecycleState.ERROR:
+        console.log(`❌ Audio error: ${this.currentAudio} (${this.errorMessage})`);
+        this.onError();
+        break;
     }
   }
   
-  // State-specific handlers
-  private onIdle(): void {
+  // State-specific handlers (protected for extensibility)
+  protected onIdle(): void {
     this.currentAudio = null;
     this.startTime = 0;
+    this.errorMessage = null;
     // Maybe start background music or show idle UI
   }
   
-  private onQueued(): void {
+  protected onQueued(): void {
     // Audio is in queue, waiting to play
     // Good time to show "Loading..." UI
   }
   
-  private onPlaying(): void {
+  protected onPlaying(): void {
     // Audio is actively playing
     // Update UI to show play state, enable pause/skip controls
   }
   
-  private onCompleting(): void {
+  protected onPaused(): void {
+    // Audio is paused
+    // Update UI to show pause state, enable resume control
+  }
+  
+  protected onCompleting(): void {
     // Audio is near end
     // Good time to preload next track or prepare transition
   }
   
-  private onCompleted(): void {
+  protected onCompleted(): void {
     // Audio finished successfully
     // Update analytics, show completion feedback
   }
   
-  private onInterrupted(): void {
+  protected onInterrupted(): void {
     // Audio was stopped early
     // Log interruption, handle cleanup
   }
   
+  protected onError(): void {
+    // Handle error state
+    console.error(`Audio playback error: ${this.errorMessage}`);
+    // Maybe retry, show error UI, etc.
+  }
+  
   // Public interface
-  getCurrentState(): AudioLifecycleState {
+  public getCurrentState(): AudioLifecycleState {
     return this.state;
   }
   
-  getCurrentAudio(): string | null {
+  public getCurrentAudio(): string | null {
     return this.currentAudio;
   }
   
-  getElapsedTime(): number {
+  public getElapsedTime(): number {
     return this.startTime > 0 ? Date.now() - this.startTime : 0;
   }
   
-  isActive(): boolean {
+  public getErrorMessage(): string | null {
+    return this.errorMessage;
+  }
+  
+  public isActive(): boolean {
     return [
       AudioLifecycleState.QUEUED,
       AudioLifecycleState.PLAYING,
+      AudioLifecycleState.PAUSED,
       AudioLifecycleState.COMPLETING
     ].includes(this.state);
+  }
+  
+  public hasError(): boolean {
+    return this.state === AudioLifecycleState.ERROR;
+  }
+  
+  // Public interface to control audio state
+  public pauseAudio(fadeType: FadeType = FadeType.Gentle): void {
+    if (this.state === AudioLifecycleState.PLAYING) {
+      pauseWithFade(fadeType, this.channel);
+      // State transition will happen via onQueueChange event
+    }
+  }
+  
+  public resumeAudio(fadeType: FadeType = FadeType.Gentle): void {
+    if (this.state === AudioLifecycleState.PAUSED) {
+      resumeWithFade(fadeType, this.channel);
+      // State transition will happen via onQueueChange event
+    }
+  }
+  
+  public stopAudio(): void {
+    if (this.isActive()) {
+      this.manualInterrupt = true; // Flag that this is a manual interruption
+      stopCurrentAudioInChannel(this.channel);
+      // State transition will happen via onAudioComplete event
+    }
+  }
+  
+  public skipToNext(): void {
+    if (this.isActive()) {
+      this.manualInterrupt = true; // Flag that this is a manual interruption
+      stopCurrentAudioInChannel(this.channel);
+      // State transition will happen via onAudioComplete event
+    }
+  }
+  
+  public retry(): boolean {
+    if (this.state === AudioLifecycleState.ERROR && this.currentAudio) {
+      // Try to queue the same audio again
+      queueAudio(this.currentAudio, this.channel, { addToFront: true });
+      return true;
+    }
+    return false;
+  }
+  
+  public destroy(): void {
+    // Unsubscribe from all events to prevent memory leaks
+    offQueueChange(this.channel);
+    offAudioStart(this.channel);
+    offAudioComplete(this.channel);
+    offAudioProgress(this.channel);
+    offAudioError(this.channel);
+    
+    // Reset state
+    this.state = AudioLifecycleState.IDLE;
+    this.currentAudio = null;
+    this.startTime = 0;
+    this.errorMessage = null;
+    this.manualInterrupt = false;
   }
 }
 ```
@@ -459,56 +550,148 @@ class AudioLifecycleAnalytics {
     totalStarted: 0,
     totalCompleted: 0,
     totalInterrupted: 0,
+    totalErrors: 0,
     totalPlaybackTime: 0
   };
   
+  private trackingMap = new Map<string, { startTime: number, lastState: string }>();
+  private channel: number;
+  
   constructor(channel: number = 0) {
-    this.setupAnalytics(channel);
+    // Validate channel number
+    if (channel < 0) {
+      throw new Error("Channel number must be non-negative");
+    }
+    
+    this.channel = channel;
+    this.setupAnalytics();
   }
   
-  private setupAnalytics(channel: number): void {
-    // Track all lifecycle events
-    onQueueChange(channel, (snapshot) => {
-      if (snapshot.totalItems > 0) {
-        this.recordEvent('queued', snapshot.currentlyPlaying);
-        this.sessionStats.totalQueued++;
+  private setupAnalytics(): void {
+    // Track when audio is queued
+    onQueueChange(this.channel, (snapshot) => {
+      if (snapshot.totalItems > 0 && snapshot.items[0]) {
+        const currentTrack = snapshot.items[0].fileName;
+        
+        // Only record new items being queued
+        if (!this.trackingMap.has(currentTrack)) {
+          this.recordEvent('queued', currentTrack);
+          this.sessionStats.totalQueued++;
+          this.trackingMap.set(currentTrack, { 
+            startTime: 0, 
+            lastState: 'queued' 
+          });
+        }
       }
     });
     
-    onAudioStart(channel, (info) => {
-      this.recordEvent('started', info.fileName);
+    // Track audio start events
+    onAudioStart(this.channel, (info) => {
+      const fileName = info.fileName || 'unknown';
+      const trackData = this.trackingMap.get(fileName) || { 
+        startTime: 0, 
+        lastState: '' 
+      };
+      
+      // Record playback start time for duration calculation
+      trackData.startTime = Date.now();
+      trackData.lastState = 'started';
+      this.trackingMap.set(fileName, trackData);
+      
+      this.recordEvent('started', fileName);
       this.sessionStats.totalStarted++;
     });
     
-    onAudioComplete(channel, (info) => {
-      if (info.wasInterrupted) {
-        this.recordEvent('interrupted', info.fileName, info.playbackDuration);
-        this.sessionStats.totalInterrupted++;
-      } else {
-        this.recordEvent('completed', info.fileName, info.playbackDuration);
-        this.sessionStats.totalCompleted++;
-      }
+    // Track when audio completes naturally
+    onAudioComplete(this.channel, (info) => {
+      const fileName = info.fileName || 'unknown';
+      const trackData = this.trackingMap.get(fileName);
       
-      this.sessionStats.totalPlaybackTime += info.playbackDuration;
-    });
-  }
-  
-  private recordEvent(state: string, audioFile: string | null, duration?: number): void {
-    this.lifecycleEvents.push({
-      timestamp: Date.now(),
-      state,
-      audioFile,
-      duration
+      if (trackData) {
+        // Calculate playback duration
+        const playbackDuration = trackData.startTime > 0 ? 
+          Date.now() - trackData.startTime : 0;
+        
+        // Determine if this was a natural completion or interruption
+        // If we have a remaining queue count, this was likely interrupted
+        const wasInterrupted = info.remainingInQueue > 0 && 
+          trackData.lastState !== 'paused';
+        
+        if (wasInterrupted) {
+          this.recordEvent('interrupted', fileName, playbackDuration);
+          this.sessionStats.totalInterrupted++;
+        } else {
+          this.recordEvent('completed', fileName, playbackDuration);
+          this.sessionStats.totalCompleted++;
+        }
+        
+        // Update total playback time
+        this.sessionStats.totalPlaybackTime += playbackDuration;
+        
+        // Clean up tracking
+        this.trackingMap.delete(fileName);
+      }
     });
     
-    console.log(`📊 Lifecycle Event: ${state} - ${audioFile || 'Unknown'}`);
+    // Track audio pause events
+    onAudioPause(this.channel, (info) => {
+      const fileName = info.fileName || 'unknown';
+      const trackData = this.trackingMap.get(fileName);
+      
+      if (trackData) {
+        trackData.lastState = 'paused';
+        this.trackingMap.set(fileName, trackData);
+        this.recordEvent('paused', fileName);
+      }
+    });
+    
+    // Track audio resume events
+    onAudioResume(this.channel, (info) => {
+      const fileName = info.fileName || 'unknown';
+      const trackData = this.trackingMap.get(fileName);
+      
+      if (trackData) {
+        trackData.lastState = 'resumed';
+        this.trackingMap.set(fileName, trackData);
+        this.recordEvent('resumed', fileName);
+      }
+    });
+    
+    // Track audio errors
+    onAudioError(this.channel, (errorInfo) => {
+      const fileName = errorInfo.audioUrl ? 
+        extractFileName(errorInfo.audioUrl) : 'unknown';
+      
+      this.recordEvent('error', fileName);
+      this.sessionStats.totalErrors++;
+      
+      // Clean up tracking for this file
+      this.trackingMap.delete(fileName);
+    });
   }
   
-  getLifecycleReport(): {
+  private recordEvent(
+    state: string, 
+    audioFile: string | null, 
+    duration?: number
+  ): void {
+    const event = {
+      timestamp: Date.now(),
+      state,
+      audioFile: audioFile || null,
+      ...(duration !== undefined ? { duration } : {})
+    };
+    
+    this.lifecycleEvents.push(event);
+    console.log(`📊 Lifecycle Event: ${state} - ${audioFile || 'Unknown'}${
+      duration ? ` (${duration}ms)` : ''
+    }`);
+  }
+  
+  public getLifecycleReport(): {
     sessionDuration: number;
     totalEvents: number;
     completionRate: number;
-    averagePlaybackDuration: number;
     sessionStats: typeof this.sessionStats;
   } {
     const sessionDuration = this.lifecycleEvents.length > 0 
@@ -519,611 +702,12 @@ class AudioLifecycleAnalytics {
       ? this.sessionStats.totalCompleted / this.sessionStats.totalStarted 
       : 0;
     
-    const averagePlaybackDuration = this.sessionStats.totalCompleted > 0 
-      ? this.sessionStats.totalPlaybackTime / this.sessionStats.totalCompleted 
-      : 0;
-    
     return {
       sessionDuration,
       totalEvents: this.lifecycleEvents.length,
       completionRate,
-      averagePlaybackDuration,
       sessionStats: { ...this.sessionStats }
     };
-  }
-  
-  getEventTimeline(): Array<{
-    timestamp: number;
-    state: string;
-    audioFile: string | null;
-    duration?: number;
-  }> {
-    return [...this.lifecycleEvents];
-  }
-}
-```
-
-## Error Handling in Lifecycle
-
-Handle errors and edge cases throughout the audio lifecycle:
-
-```typescript
-class AudioLifecycleErrorHandler {
-  private errorCount: number = 0;
-  private maxErrors: number = 5;
-  
-  constructor(channel: number = 0) {
-    this.setupErrorHandling(channel);
-  }
-  
-  private setupErrorHandling(channel: number): void {
-    // Monitor for lifecycle anomalies
-    
-    // Detect if audio fails to start
-    let expectingStart = false;
-    
-    onQueueChange(channel, (snapshot) => {
-      if (snapshot.totalItems > 0 && snapshot.currentlyPlaying) {
-        expectingStart = true;
-        
-        // Audio should start within reasonable time
-        setTimeout(() => {
-          if (expectingStart) {
-            this.handleStartTimeout(snapshot.currentlyPlaying);
-          }
-        }, 5000); // 5 second timeout
-      }
-    });
-    
-    onAudioStart(channel, () => {
-      expectingStart = false; // Audio started successfully
-    });
-    
-    // Detect if progress stops updating
-    let lastProgressTime = 0;
-    let progressStalled = false;
-    
-    onAudioProgress(channel, (info) => {
-      const now = Date.now();
-      
-      if (lastProgressTime > 0) {
-        const timeSinceLastProgress = now - lastProgressTime;
-        
-        if (timeSinceLastProgress > 2000 && !progressStalled) {
-          // Progress hasn't updated in 2 seconds
-          this.handleProgressStall(info.fileName);
-          progressStalled = true;
-        }
-      }
-      
-      lastProgressTime = now;
-      progressStalled = false;
-    });
-    
-    // Detect unexpected completions
-    onAudioComplete(channel, (info) => {
-      if (info.playbackDuration < 1000 && !info.wasInterrupted) {
-        // Audio completed very quickly, might be an error
-        this.handleSuspiciousCompletion(info);
-      }
-    });
-  }
-  
-  private handleStartTimeout(fileName: string | null): void {
-    this.errorCount++;
-    console.error(`❌ Audio failed to start within timeout: ${fileName}`);
-    
-    if (this.errorCount >= this.maxErrors) {
-      this.handleCriticalError('Too many start failures');
-    }
-  }
-  
-  private handleProgressStall(fileName: string): void {
-    this.errorCount++;
-    console.error(`❌ Audio progress stalled: ${fileName}`);
-    
-    // Maybe try to restart playback
-    this.attemptRecovery(fileName);
-  }
-  
-  private handleSuspiciousCompletion(info: AudioCompleteInfo): void {
-    this.errorCount++;
-    console.error(`❌ Suspicious completion: ${info.fileName} (${info.playbackDuration}ms)`);
-    
-    // Maybe the file was corrupted or very short
-  }
-  
-  private attemptRecovery(fileName: string): void {
-    console.log(`🔄 Attempting recovery for ${fileName}`);
-    // Recovery logic - maybe restart the channel or skip to next
-  }
-  
-  private handleCriticalError(reason: string): void {
-    console.error(`💥 Critical audio system error: ${reason}`);
-    // Maybe disable audio system or show error to user
-  }
-  
-  getErrorCount(): number {
-    return this.errorCount;
-  }
-  
-  resetErrors(): void {
-    this.errorCount = 0;
-    console.log('✨ Error count reset');
-  }
-}
-```
-
-## Audio Loading States and Error Handling
-
-Track loading states and handle various error conditions:
-
-```typescript
-enum LoadingState {
-  IDLE = 'idle',
-  LOADING = 'loading', 
-  LOADED = 'loaded',
-  ERROR = 'error',
-  TIMEOUT = 'timeout'
-}
-
-class AudioLoadingTracker {
-  private loadingStates: Map<string, LoadingState> = new Map();
-  private loadingTimeouts: Map<string, NodeJS.Timeout> = new Map();
-  private readonly LOAD_TIMEOUT = 10000; // 10 seconds
-  
-  constructor(channel: number = 0) {
-    this.setupLoadingTracking(channel);
-  }
-  
-  private setupLoadingTracking(channel: number): void {
-    // Track when audio is queued (starts loading)
-    onQueueChange(channel, (snapshot) => {
-      snapshot.items.forEach(item => {
-        if (!this.loadingStates.has(item.fileName)) {
-          this.setLoadingState(item.fileName, LoadingState.LOADING);
-          this.startLoadingTimeout(item.fileName);
-        }
-      });
-    });
-    
-    // Track successful loads
-    onAudioStart(channel, (info) => {
-      this.setLoadingState(info.fileName, LoadingState.LOADED);
-      this.clearLoadingTimeout(info.fileName);
-    });
-    
-    // Track completion (cleanup)
-    onAudioComplete(channel, (info) => {
-      // Clean up after a delay to allow for UI updates
-      setTimeout(() => {
-        this.cleanupLoadingState(info.fileName);
-      }, 1000);
-    });
-  }
-  
-  private setLoadingState(fileName: string, state: LoadingState): void {
-    const oldState = this.loadingStates.get(fileName);
-    this.loadingStates.set(fileName, state);
-    
-    console.log(`📂 Loading: ${fileName} - ${oldState || 'UNKNOWN'} → ${state}`);
-    
-    // Trigger UI updates
-    this.notifyLoadingStateChange(fileName, state);
-  }
-  
-  private startLoadingTimeout(fileName: string): void {
-    const timeout = setTimeout(() => {
-      const currentState = this.loadingStates.get(fileName);
-      if (currentState === LoadingState.LOADING) {
-        this.setLoadingState(fileName, LoadingState.TIMEOUT);
-        this.handleLoadingTimeout(fileName);
-      }
-    }, this.LOAD_TIMEOUT);
-    
-    this.loadingTimeouts.set(fileName, timeout);
-  }
-  
-  private clearLoadingTimeout(fileName: string): void {
-    const timeout = this.loadingTimeouts.get(fileName);
-    if (timeout) {
-      clearTimeout(timeout);
-      this.loadingTimeouts.delete(fileName);
-    }
-  }
-  
-  private handleLoadingTimeout(fileName: string): void {
-    console.error(`⏱️ Loading timeout for: ${fileName}`);
-    // Could show user notification, try alternate sources, etc.
-  }
-  
-  private cleanupLoadingState(fileName: string): void {
-    this.loadingStates.delete(fileName);
-    this.clearLoadingTimeout(fileName);
-  }
-  
-  private notifyLoadingStateChange(fileName: string, state: LoadingState): void {
-    // Update UI based on loading state
-    const event = new CustomEvent('audioLoadingStateChange', {
-      detail: { fileName, state }
-    });
-    document.dispatchEvent(event);
-  }
-  
-  // Public API
-  getLoadingState(fileName: string): LoadingState {
-    return this.loadingStates.get(fileName) || LoadingState.IDLE;
-  }
-  
-  getAllLoadingStates(): Map<string, LoadingState> {
-    return new Map(this.loadingStates);
-  }
-  
-  isLoading(fileName: string): boolean {
-    return this.getLoadingState(fileName) === LoadingState.LOADING;
-  }
-  
-  hasError(fileName: string): boolean {
-    const state = this.getLoadingState(fileName);
-    return state === LoadingState.ERROR || state === LoadingState.TIMEOUT;
-  }
-}
-```
-
-## Browser Compatibility and Network Error Handling
-
-Handle browser-specific issues and network problems:
-
-```typescript
-class AudioCompatibilityHandler {
-  private supportedFormats: string[] = [];
-  private networkErrors: number = 0;
-  private readonly MAX_NETWORK_ERRORS = 3;
-  
-  constructor() {
-    this.detectSupportedFormats();
-    this.setupNetworkErrorHandling();
-  }
-  
-  private detectSupportedFormats(): void {
-    const audio = new Audio();
-    const formats = [
-      { ext: 'mp3', type: 'audio/mpeg' },
-      { ext: 'wav', type: 'audio/wav' },
-      { ext: 'ogg', type: 'audio/ogg' },
-      { ext: 'm4a', type: 'audio/mp4' },
-      { ext: 'webm', type: 'audio/webm' }
-    ];
-    
-    this.supportedFormats = formats
-      .filter(format => audio.canPlayType(format.type) !== '')
-      .map(format => format.ext);
-    
-    console.log('🎵 Supported audio formats:', this.supportedFormats);
-  }
-  
-  private setupNetworkErrorHandling(): void {
-    // Monitor for network-related failures
-    let consecutiveFailures = 0;
-    
-    onQueueChange(0, (snapshot) => {
-      // Reset failure count on successful queue changes
-      if (snapshot.totalItems > 0) {
-        consecutiveFailures = 0;
-      }
-    });
-    
-    // This would need to be implemented via actual error detection
-    // since onAudioError doesn't exist yet
-    this.simulateNetworkErrorDetection();
-  }
-  
-  private simulateNetworkErrorDetection(): void {
-    // This is a placeholder - in reality you'd detect network errors
-    // through various means like monitoring for stalled progress,
-    // failed audio starts, etc.
-    
-    let lastSuccessfulStart = Date.now();
-    
-    onAudioStart(0, () => {
-      lastSuccessfulStart = Date.now();
-      this.networkErrors = 0; // Reset on success
-    });
-    
-    // Check for potential network issues
-    setInterval(() => {
-      const timeSinceLastSuccess = Date.now() - lastSuccessfulStart;
-      
-      // If no successful starts in a while and we have queued items
-      if (timeSinceLastSuccess > 30000) { // 30 seconds
-        const snapshot = getQueueSnapshot(0);
-        if (snapshot.totalItems > 0 && !snapshot.currentlyPlaying) {
-          this.handlePotentialNetworkIssue();
-        }
-      }
-    }, 10000); // Check every 10 seconds
-  }
-  
-  private handlePotentialNetworkIssue(): void {
-    this.networkErrors++;
-    console.warn(`🌐 Potential network issue detected (${this.networkErrors}/${this.MAX_NETWORK_ERRORS})`);
-    
-    if (this.networkErrors >= this.MAX_NETWORK_ERRORS) {
-      this.handleNetworkFailure();
-    }
-  }
-  
-  private handleNetworkFailure(): void {
-    console.error('🚫 Network failure detected - audio system degraded');
-    
-    // Show user notification
-    this.showNetworkErrorNotification();
-    
-    // Maybe switch to lower quality audio or cached content
-    this.enableOfflineMode();
-  }
-  
-  private showNetworkErrorNotification(): void {
-    const notification = document.createElement('div');
-    notification.className = 'audio-network-error';
-    notification.innerHTML = `
-      <div class="error-message">
-        <span class="error-icon">⚠️</span>
-        <span>Network issues detected. Audio quality may be reduced.</span>
-        <button onclick="this.parentElement.parentElement.remove()">✖️</button>
-      </div>
-    `;
-    document.body.appendChild(notification);
-  }
-  
-  private enableOfflineMode(): void {
-    console.log('🔄 Switching to offline mode...');
-    // Implementation would depend on your caching strategy
-  }
-  
-  // Public API
-  isFormatSupported(fileName: string): boolean {
-    const extension = fileName.split('.').pop()?.toLowerCase() || '';
-    return this.supportedFormats.includes(extension);
-  }
-  
-  getSupportedFormats(): string[] {
-    return [...this.supportedFormats];
-  }
-  
-  getNetworkErrorCount(): number {
-    return this.networkErrors;
-  }
-  
-  resetNetworkErrors(): void {
-    this.networkErrors = 0;
-    console.log('✅ Network error count reset');
-  }
-}
-```
-
-## Performance Monitoring and Memory Management
-
-Monitor performance and manage memory usage:
-
-```typescript
-class AudioPerformanceMonitor {
-  private memoryUsage: number[] = [];
-  private performanceMetrics: Map<string, number> = new Map();
-  private readonly MAX_MEMORY_SAMPLES = 100;
-  
-  constructor() {
-    this.setupPerformanceMonitoring();
-  }
-  
-  private setupPerformanceMonitoring(): void {
-    // Monitor memory usage
-    if ('memory' in performance) {
-      setInterval(() => {
-        this.recordMemoryUsage();
-      }, 5000); // Every 5 seconds
-    }
-    
-    // Monitor audio performance
-    onAudioStart(0, (info) => {
-      this.recordPerformanceMetric('audio_start_time', Date.now());
-    });
-    
-    onAudioComplete(0, (info) => {
-      const startTime = this.performanceMetrics.get('audio_start_time');
-      if (startTime) {
-        const loadTime = Date.now() - startTime;
-        this.recordPerformanceMetric('audio_load_duration', loadTime);
-        console.log(`📊 Audio load time: ${loadTime}ms for ${info.fileName}`);
-      }
-    });
-  }
-  
-  private recordMemoryUsage(): void {
-    if ('memory' in performance) {
-      const memory = (performance as any).memory;
-      const usedMB = memory.usedJSHeapSize / (1024 * 1024);
-      
-      this.memoryUsage.push(usedMB);
-      
-      // Keep only recent samples
-      if (this.memoryUsage.length > this.MAX_MEMORY_SAMPLES) {
-        this.memoryUsage.shift();
-      }
-      
-      // Check for memory leaks
-      this.checkForMemoryLeaks(usedMB);
-    }
-  }
-  
-  private checkForMemoryLeaks(currentUsage: number): void {
-    if (this.memoryUsage.length < 10) return;
-    
-    const recentAverage = this.memoryUsage.slice(-10).reduce((a, b) => a + b) / 10;
-    const oldAverage = this.memoryUsage.slice(0, 10).reduce((a, b) => a + b) / 10;
-    
-    const growthRate = (recentAverage - oldAverage) / oldAverage;
-    
-    if (growthRate > 0.5) { // 50% increase
-      console.warn(`🧠 Potential memory leak detected: ${growthRate * 100}% increase`);
-      this.handleMemoryWarning();
-    }
-  }
-  
-  private handleMemoryWarning(): void {
-    console.log('🔄 Attempting memory cleanup...');
-    
-    // Force garbage collection if available
-    if ('gc' in window && typeof (window as any).gc === 'function') {
-      (window as any).gc();
-    }
-    
-    // Clear old performance metrics
-    this.performanceMetrics.clear();
-    
-    // Could also stop non-essential audio processing
-  }
-  
-  private recordPerformanceMetric(name: string, value: number): void {
-    this.performanceMetrics.set(name, value);
-  }
-  
-  // Public API
-  getMemoryUsage(): number[] {
-    return [...this.memoryUsage];
-  }
-  
-  getCurrentMemoryUsage(): number {
-    if ('memory' in performance) {
-      const memory = (performance as any).memory;
-      return memory.usedJSHeapSize / (1024 * 1024); // MB
-    }
-    return 0;
-  }
-  
-  getPerformanceReport(): object {
-    const avgMemory = this.memoryUsage.length > 0 
-      ? this.memoryUsage.reduce((a, b) => a + b) / this.memoryUsage.length 
-      : 0;
-    
-    return {
-      averageMemoryUsage: avgMemory,
-      currentMemoryUsage: this.getCurrentMemoryUsage(),
-      memoryTrend: this.calculateMemoryTrend(),
-      performanceMetrics: Object.fromEntries(this.performanceMetrics)
-    };
-  }
-  
-  private calculateMemoryTrend(): 'increasing' | 'decreasing' | 'stable' {
-    if (this.memoryUsage.length < 2) return 'stable';
-    
-    const recent = this.memoryUsage.slice(-5);
-    const older = this.memoryUsage.slice(-10, -5);
-    
-    if (recent.length === 0 || older.length === 0) return 'stable';
-    
-    const recentAvg = recent.reduce((a, b) => a + b) / recent.length;
-    const olderAvg = older.reduce((a, b) => a + b) / older.length;
-    
-    const threshold = 0.05; // 5% threshold
-    
-    if (recentAvg > olderAvg * (1 + threshold)) return 'increasing';
-    if (recentAvg < olderAvg * (1 - threshold)) return 'decreasing';
-    return 'stable';
-  }
-}
-```
-
-## Complete Lifecycle Manager
-
-Combine all lifecycle management into one comprehensive system:
-
-```typescript
-class AudioLifecycleManager {
-  private errorHandler: AudioLifecycleErrorHandler;
-  private loadingTracker: AudioLoadingTracker;
-  private compatibilityHandler: AudioCompatibilityHandler;
-  private performanceMonitor: AudioPerformanceMonitor;
-  
-  constructor(channel: number = 0) {
-    this.errorHandler = new AudioLifecycleErrorHandler(channel);
-    this.loadingTracker = new AudioLoadingTracker(channel);
-    this.compatibilityHandler = new AudioCompatibilityHandler();
-    this.performanceMonitor = new AudioPerformanceMonitor();
-    
-    this.setupUnifiedReporting();
-  }
-  
-  private setupUnifiedReporting(): void {
-    // Generate comprehensive reports periodically
-    setInterval(() => {
-      this.generateHealthReport();
-    }, 30000); // Every 30 seconds
-  }
-  
-  private generateHealthReport(): void {
-    const report = {
-      timestamp: new Date().toISOString(),
-      errors: {
-        count: this.errorHandler.getErrorCount(),
-        networkErrors: this.compatibilityHandler.getNetworkErrorCount()
-      },
-      loading: {
-        activeStates: Array.from(this.loadingTracker.getAllLoadingStates().entries())
-      },
-      compatibility: {
-        supportedFormats: this.compatibilityHandler.getSupportedFormats()
-      },
-      performance: this.performanceMonitor.getPerformanceReport()
-    };
-    
-    console.log('📋 Audio System Health Report:', report);
-    
-    // Could send to analytics or monitoring service
-    this.sendHealthReport(report);
-  }
-  
-  private sendHealthReport(report: object): void {
-    // Placeholder for sending reports to monitoring service
-    // In a real application, you might send this to your analytics platform
-  }
-  
-  // Public API for manual intervention
-  resetErrorCounts(): void {
-    this.errorHandler.resetErrors();
-    this.compatibilityHandler.resetNetworkErrors();
-    console.log('🔄 All error counts reset');
-  }
-  
-  getSystemHealth(): 'healthy' | 'warning' | 'critical' {
-    const errorCount = this.errorHandler.getErrorCount();
-    const networkErrors = this.compatibilityHandler.getNetworkErrorCount();
-    const memoryTrend = this.performanceMonitor.getPerformanceReport() as any;
-    
-    if (errorCount >= 5 || networkErrors >= 3 || memoryTrend.memoryTrend === 'increasing') {
-      return 'critical';
-    } else if (errorCount >= 2 || networkErrors >= 1) {
-      return 'warning';  
-    } else {
-      return 'healthy';
-    }
-  }
-  
-  attemptSystemRecovery(): void {
-    console.log('🚑 Attempting system recovery...');
-    
-    // Reset error counts
-    this.resetErrorCounts();
-    
-    // Clear any stuck audio
-    stopAllAudioInChannel(0);
-    
-    // Force memory cleanup
-    if ('gc' in window && typeof (window as any).gc === 'function') {
-      (window as any).gc();
-    }
-    
-    console.log('✅ System recovery completed');
   }
 }
 ```

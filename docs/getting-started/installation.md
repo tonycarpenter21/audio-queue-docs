@@ -145,25 +145,6 @@ Audio Channel Queue supports all formats that the browser's `HTMLAudioElement` s
 | **Voice/Speech** | MP3 | Good compression for speech |
 | **Game Audio** | WAV or OGG | Low latency, good quality |
 
-### Audio File Organization
-
-```
-src/
-├── audio/
-│   ├── music/
-│   │   ├── background.mp3
-│   │   └── menu-theme.mp3
-│   ├── sfx/
-│   │   ├── button-click.wav
-│   │   ├── explosion.wav
-│   │   └── notification.wav
-│   └── voice/
-│       ├── welcome.mp3
-│       └── instructions.mp3
-└── components/
-    └── AudioPlayer.tsx
-```
-
 ## 🔧 Build Tool Configuration
 
 ### Webpack

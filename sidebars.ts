@@ -21,6 +21,7 @@ const sidebars: SidebarsConfig = {
         'getting-started/installation',
         'getting-started/quick-start',
         'getting-started/basic-usage',
+        'getting-started/react-integration',
         'getting-started/browser-compatibility',
       ],
       label: 'Getting Started',
@@ -39,11 +40,14 @@ const sidebars: SidebarsConfig = {
     },
     {
       items: [
+        'api-reference/quick-reference',
         'api-reference/queue-management',
         'api-reference/volume-control',
         'api-reference/pause-resume',
         'api-reference/event-listeners',
         'api-reference/audio-information',
+        'api-reference/error-handling',
+        'api-reference/utilities',
         'api-reference/types-interfaces'
       ],
       label: 'API Reference',
@@ -51,7 +55,9 @@ const sidebars: SidebarsConfig = {
     },
     {
       items: [
-        'advanced/volume-ducking'
+        'advanced/advanced-queue-manipulation',
+        'advanced/volume-ducking',
+        'advanced/error-handling'
       ],
       label: 'Advanced',
       type: 'category'

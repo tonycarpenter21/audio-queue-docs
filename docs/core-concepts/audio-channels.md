@@ -115,47 +115,11 @@ class GameAudioManager {
   }
   
   async playDialog(audioFile: string): Promise<void> {
-    // Dialog interrupts other voice, priority playback
+    // Dialog interrupts other voice
+    // Priority playback places this right after the current playing sound in the queue
     await queueAudioPriority('./voice/' + audioFile, GameChannels.VOICE);
-  }
-}
-```
-
-### Podcast/Media Applications
-
-Channel setup for media applications:
-
-```typescript
-const MediaChannels = {
-  CONTENT: 0,         // Main podcast/video content
-  ADS: 1,             // Advertisement audio
-  NOTIFICATIONS: 2    // App notifications
-} as const;
-
-class PodcastPlayer {
-  async playEpisode(episodeUrl: string): Promise<void> {
-    // Main content on primary channel (using default channel 0)
-    await queueAudio(episodeUrl);
-  }
-  
-  async insertAd(adUrl: string): Promise<void> {
-    // Pause main content
-    pauseChannel(MediaChannels.CONTENT);
-    
-    // Play ad with priority (interrupts anything on ads channel)
-    await queueAudioPriority(adUrl, MediaChannels.ADS);
-    
-    // Resume main content when ad finishes
-    onAudioComplete(MediaChannels.ADS, () => {
-      resumeChannel(MediaChannels.CONTENT);
-    });
-  }
-  
-  async showNotification(notificationSound: string): Promise<void> {
-    // Brief notification sound, doesn't interrupt content
-    await queueAudio(notificationSound, MediaChannels.NOTIFICATIONS, {
-      volume: 0.7
-    });
+    // This stops the current playing sound so the new priority sound begins to play
+    stopCurrentAudioInChannel();
   }
 }
 ```
@@ -262,12 +226,12 @@ class VolumeManager {
   }
   
   duckChannels(exceptChannel: number, duckLevel: number = 0.3): void {
-    // Reduce volume on all channels except one (e.g., for voice priority)
-    for (const [channel, originalVolume] of this.channelVolumes) {
-      if (channel !== exceptChannel) {
-        setChannelVolume(channel, originalVolume * duckLevel);
-      }
-    }
+    // Use the proper ducking API instead of manual channel volume adjustments
+    setVolumeDucking({
+      priorityChannel: exceptChannel,
+      priorityVolume: 1.0,
+      duckingVolume: duckLevel
+    });
   }
   
   restoreChannelVolumes(): void {
@@ -285,18 +249,17 @@ class VolumeManager {
 class ChannelEventCoordinator {
   setupCrossChannelEvents(): void {
     // When voice starts, duck other audio
-    onAudioStart(2, () => {
+    onAudioStart(2, (info) => {
       console.log('Voice started - ducking other channels');
-      duckChannelVolume(0, 0.3); // Duck music
-      duckChannelVolume(1, 0.5); // Duck SFX slightly
+      // Use the ducking API instead of individual channel adjustments
+      setVolumeDucking({
+        priorityChannel: 2,      // Voice channel
+        priorityVolume: 1.0,     // Voice at full volume
+        duckingVolume: 0.3       // Other channels at 30%
+      });
     });
     
-    // When voice ends, restore volumes
-    onAudioComplete(2, () => {
-      console.log('Voice completed - restoring volumes');
-      restoreChannelVolume(0);
-      restoreChannelVolume(1);
-    });
+    // When voice ends, other channel volumes restore automatically
     
     // When music changes, log transition
     onAudioStart(0, (info) => {
@@ -360,7 +323,7 @@ class ChannelMemoryManager {
       const audioInfo = getCurrentAudioInfo(channel);
       
       // Clean up channels with no activity
-      if (!snapshot.isChannelActive && !audioInfo) {
+      if (snapshot.totalItems === 0 && !audioInfo) {
         console.log(`Cleaning up inactive channel ${channel}`);
         // Channel cleanup is automatic, but good to track
       }
@@ -374,7 +337,7 @@ class ChannelMemoryManager {
       const snapshot = getQueueSnapshot(channel);
       usage[channel] = {
         queueSize: snapshot.totalItems,
-        isActive: snapshot.isChannelActive
+        isActive: snapshot.totalItems > 0 && !snapshot.isPaused
       };
     }
     

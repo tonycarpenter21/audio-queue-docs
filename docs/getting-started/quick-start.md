@@ -222,8 +222,10 @@ class GameAudio {
   }
 
   async gameOver() {
-    // Priority announcement (will duck background music)
-    await queueAudioPriority('./voice/game-over.mp3', 2);
+    // Voice announcement on priority channel
+    // This will automatically duck all other channels to 10% volume
+    await queueAudio('./voice/game-over.mp3', 2);
+    // When this audio finishes, other channels will return to their original volume
   }
 
   async pauseGame() {
@@ -260,7 +262,7 @@ Understand how channels, queues, and the audio lifecycle work
 Complete documentation of all available functions
 
 ### 🎯 **[Examples](../getting-started/basic-usage)**
-Real-world examples for gaming, podcasts, and interactive apps
+Real-world examples for gaming and interactive apps
 
 ### 🔥 **[Advanced Features](../advanced/volume-ducking)**
 Volume ducking, priority queuing, and progress tracking

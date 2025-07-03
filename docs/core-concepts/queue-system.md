@@ -53,32 +53,8 @@ import { queueAudio, queueAudioPriority } from 'audio-channel-queue';
 await queueAudio('./music/background.mp3');
 
 // Urgent announcement interrupts immediately
-await queueAudioPriority('./voice/emergency-alert.mp3');
-
-// Background music will resume after the alert
-```
-
-### Mixed Queuing Patterns
-
-```typescript
-// Complex queuing scenario
-async function demonstrateQueueing(): Promise<void> {
-  // 1. Start background music (using default channel 0)
-  await queueAudio('./music/calm-background.mp3', 0, { loop: true });
-  
-  // 2. Queue some planned content
-  await queueAudio('./voice/welcome.mp3');
-  await queueAudio('./voice/instructions.mp3');
-  
-  // 3. Emergency interruption
-  await queueAudioPriority('./alerts/urgent.mp3');
-  
-  // 4. More content after emergency
-  await queueAudio('./voice/continue.mp3');
-  
-  // Final order: urgent → welcome → instructions → continue
-  // (background music was stopped by the first priority call)
-}
+await queueAudioPriority('./voice/emergency-alert.mp3'); // This queues the next sound after the currently playing sound
+await stopCurrentAudioInChannel() // This stops the currently playing sound
 ```
 
 ## Queue States and Information
@@ -95,8 +71,8 @@ function analyzeQueue(channel: number): void {
   
   console.log(`Channel ${channel} Queue Analysis:`);
   console.log(`- Total items: ${snapshot.totalItems}`);
-  console.log(`- Currently playing: ${snapshot.currentlyPlaying || 'Nothing'}`);
-  console.log(`- Channel active: ${snapshot.isChannelActive}`);
+  console.log(`- Current index: ${snapshot.currentIndex}`);
+  console.log(`- Is paused: ${snapshot.isPaused}`);
   
   if (snapshot.items.length > 0) {
     console.log('\nQueue Items:');
@@ -123,7 +99,7 @@ class QueueMonitor {
     onQueueChange(channel, (snapshot) => {
       console.log(`Queue changed on channel ${channel}:`);
       console.log(`- Items: ${snapshot.totalItems}`);
-      console.log(`- Playing: ${snapshot.currentlyPlaying}`);
+      console.log(`- Current index: ${snapshot.currentIndex}`);
       
       // React to queue events
       if (snapshot.totalItems === 0) {
@@ -236,243 +212,6 @@ class DynamicContentManager {
       });
     }
   }
-  
-  async insertBreakingNews(newsUrl: string): Promise<void> {
-    // Interrupt everything with priority news
-    await queueAudioPriority(newsUrl, this.baseChannel);
-  }
-}
-```
-
-### Smart Queue Management
-
-```typescript
-class SmartQueueManager {
-  private readonly maxQueueSize: number = 10;
-  private readonly channel: number;
-  
-  constructor(channel: number = 0) {
-    this.channel = channel;
-  }
-  
-  async smartQueue(audioUrl: string, priority: boolean = false): Promise<boolean> {
-    const snapshot = this.channel === 0 ? getQueueSnapshot() : getQueueSnapshot(this.channel);
-    
-    // Check queue capacity
-    if (snapshot.totalItems >= this.maxQueueSize) {
-      console.warn(`Queue full on channel ${this.channel}, rejecting: ${audioUrl}`);
-      return false;
-    }
-    
-    try {
-      if (priority) {
-        if (this.channel === 0) {
-          await queueAudioPriority(audioUrl);
-        } else {
-          await queueAudioPriority(audioUrl, this.channel);
-        }
-      } else {
-        if (this.channel === 0) {
-          await queueAudio(audioUrl);
-        } else {
-          await queueAudio(audioUrl, this.channel);
-        }
-      }
-      return true;
-    } catch (error) {
-      console.error(`Failed to queue ${audioUrl}:`, error);
-      return false;
-    }
-  }
-  
-  getQueueHealth(): { 
-    utilization: number; 
-    isHealthy: boolean; 
-    recommendation: string 
-  } {
-    const snapshot = this.channel === 0 ? getQueueSnapshot() : getQueueSnapshot(this.channel);
-    const utilization = snapshot.totalItems / this.maxQueueSize;
-    
-    let recommendation: string;
-    let isHealthy: boolean = true;
-    
-    if (utilization < 0.3) {
-      recommendation = 'Queue is light, good for responsiveness';
-    } else if (utilization < 0.7) {
-      recommendation = 'Queue utilization is optimal';
-    } else if (utilization < 0.9) {
-      recommendation = 'Queue is getting full, consider reducing load';
-      isHealthy = false;
-    } else {
-      recommendation = 'Queue is nearly full, high risk of rejections';
-      isHealthy = false;
-    }
-    
-    return { utilization, isHealthy, recommendation };
-  }
-  
-  async clearOldItems(): Promise<number> {
-    // This is conceptual - the package handles queue management internally
-    // But you can track and make decisions based on queue state
-    const snapshot = this.channel === 0 ? getQueueSnapshot() : getQueueSnapshot(this.channel);
-    
-    if (snapshot.totalItems > 7) {
-      console.log(`Queue has ${snapshot.totalItems} items, consider stopping current audio`);
-      if (this.channel === 0) {
-        stopCurrentAudioInChannel();
-      } else {
-        stopCurrentAudioInChannel(this.channel);
-      }
-      return snapshot.totalItems;
-    }
-    
-    return 0;
-  }
-}
-```
-
-## Queue Timing and Coordination
-
-### Preloading and Timing
-
-```typescript
-class TimedQueueManager {
-  async scheduleAudio(audioUrl: string, delayMs: number, channel: number = 0): Promise<void> {
-    setTimeout(async () => {
-      await queueAudio(audioUrl, channel);
-      console.log(`Scheduled audio started: ${audioUrl}`);
-    }, delayMs);
-  }
-  
-  async createTightPlaylist(tracks: string[], channel: number = 0): Promise<void> {
-    // Queue first track immediately
-    if (tracks.length > 0) {
-      await queueAudio(tracks[0], channel);
-    }
-    
-    // Queue remaining tracks
-    for (let i = 1; i < tracks.length; i++) {
-      await queueAudio(tracks[i], channel);
-    }
-    
-    console.log(`Queued ${tracks.length} tracks for seamless playback`);
-  }
-  
-  async createGappedPlaylist(tracks: string[], gapMs: number, channel: number = 0): Promise<void> {
-    // This is conceptual - you'd need additional logic for gaps
-    // The queue system plays tracks seamlessly by design
-    
-    for (let i = 0; i < tracks.length; i++) {
-      if (i === 0) {
-        await queueAudio(tracks[i], channel);
-      } else {
-        // For gaps, you might queue silence or use timed scheduling
-        setTimeout(async () => {
-          await queueAudio(tracks[i], channel);
-        }, i * gapMs);
-      }
-    }
-  }
-}
-```
-
-### Cross-Channel Synchronization
-
-```typescript
-class SynchronizedQueueManager {
-  async syncChannelPlayback(channel1: number, channel2: number): Promise<void> {
-    // Start audio on both channels simultaneously
-    const promises = [
-      queueAudio('./audio/left-channel.mp3', channel1),
-      queueAudio('./audio/right-channel.mp3', channel2)
-    ];
-    
-    await Promise.all(promises);
-    console.log('Synchronized playback started on both channels');
-  }
-  
-  async createCallAndResponse(callTrack: string, responseTrack: string): Promise<void> {
-    // Play call on channel 0
-    await queueAudio(callTrack, 0);
-    
-    // When call finishes, play response on channel 1
-    onAudioComplete(0, async () => {
-      await queueAudio(responseTrack, 1);
-    });
-  }
-  
-  async orchestrateMultiChannelSequence(): Promise<void> {
-    // Complex multi-channel coordination
-    
-    // Start background music
-    await queueAudio('./music/background.mp3', 0, { loop: true, volume: 0.3 });
-    
-    // Layer in sound effects
-    setTimeout(() => queueAudio('./sfx/wind.mp3', 1), 2000);
-    setTimeout(() => queueAudio('./sfx/birds.mp3', 2), 4000);
-    
-    // Add narration that ducks other audio
-    setTimeout(async () => {
-      // Duck background channels
-      setChannelVolume(0, 0.1);
-      setChannelVolume(1, 0.2);
-      setChannelVolume(2, 0.2);
-      
-      // Play narration
-      await queueAudio('./voice/narration.mp3', 3);
-      
-      // Restore volumes when narration ends
-      onAudioComplete(3, () => {
-        setChannelVolume(0, 0.3);
-        setChannelVolume(1, 1.0);
-        setChannelVolume(2, 1.0);
-      });
-    }, 6000);
-  }
-}
-```
-
-## Performance Optimization
-
-### Efficient Queue Operations
-
-```typescript
-class EfficientQueueManager {
-  private queueCache: Map<number, QueueSnapshot> = new Map();
-  private cacheTimeout: number = 1000; // 1 second cache
-  
-  getCachedQueueSnapshot(channel: number): QueueSnapshot {
-    const cached = this.queueCache.get(channel);
-    if (cached) {
-      return cached;
-    }
-    
-    const snapshot = getQueueSnapshot(channel);
-    this.queueCache.set(channel, snapshot);
-    
-    // Clear cache after timeout
-    setTimeout(() => {
-      this.queueCache.delete(channel);
-    }, this.cacheTimeout);
-    
-    return snapshot;
-  }
-  
-  async batchQueueAudio(audioFiles: string[], channel: number): Promise<void> {
-    // Queue multiple files efficiently
-    const promises = audioFiles.map(file => queueAudio(file, channel));
-    await Promise.all(promises);
-    console.log(`Batch queued ${audioFiles.length} files on channel ${channel}`);
-  }
-  
-  optimizeQueueSize(channel: number, maxItems: number = 5): void {
-    const snapshot = this.getCachedQueueSnapshot(channel);
-    
-    if (snapshot.totalItems > maxItems) {
-      console.warn(`Channel ${channel} queue has ${snapshot.totalItems} items, above optimal size of ${maxItems}`);
-      // Consider stopping current audio to clear queue
-    }
-  }
 }
 ```
 
@@ -499,6 +238,7 @@ class GameAudioQueue {
     
     // Character dialog (interrupts other voice)
     await queueAudioPriority('./voice/victory-shout.mp3', this.voiceChannel);
+    await stopCurrentAudioInChannel(this.voiceChannel)
   }
   
   async handleEmergency(): Promise<void> {
@@ -506,60 +246,6 @@ class GameAudioQueue {
     stopCurrentAudioInChannel(this.musicChannel);
     stopCurrentAudioInChannel(this.sfxChannel);
     await queueAudioPriority('./alerts/game-over.mp3', this.voiceChannel);
-  }
-}
-```
-
-### Podcast Queue Management
-
-```typescript
-class PodcastQueueManager {
-  private contentChannel: number = 0;
-  private currentSegment: number = 0;
-  private segments: string[] = [];
-  
-  loadEpisode(segments: string[]): void {
-    this.segments = segments;
-    this.currentSegment = 0;
-  }
-  
-  async startEpisode(): Promise<void> {
-    if (this.segments.length === 0) return;
-    
-    // Queue all segments
-    for (const segment of this.segments) {
-      await queueAudio(segment, this.contentChannel);
-    }
-    
-    this.setupSegmentTracking();
-  }
-  
-  private setupSegmentTracking(): void {
-    onAudioComplete(this.contentChannel, (info) => {
-      this.currentSegment++;
-      console.log(`Completed segment ${this.currentSegment}: ${info.fileName}`);
-      
-      if (this.currentSegment >= this.segments.length) {
-        console.log('Episode completed!');
-      }
-    });
-  }
-  
-  async insertAdBreak(adUrls: string[]): Promise<void> {
-    // Pause main content
-    pauseChannel(this.contentChannel);
-    
-    // Queue ads
-    for (const ad of adUrls) {
-      await queueAudio(ad, 1); // Ad channel
-    }
-    
-    // Resume after all ads
-    onQueueChange(1, (snapshot) => {
-      if (snapshot.totalItems === 0 && !snapshot.isChannelActive) {
-        resumeChannel(this.contentChannel);
-      }
-    });
   }
 }
 ```

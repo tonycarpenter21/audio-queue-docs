@@ -34,7 +34,7 @@ Remove a specific item from the queue by its position. Since index 0 contains th
 ### Syntax
 
 ```typescript
-removeQueuedItem(queuedSlotNumber: number, channelNumber?: number): QueueManipulationResult
+removeQueuedItem(queuedSlotNumber: number, channelNumber: number = 0): QueueManipulationResult
 ```
 
 ### Parameters
@@ -74,7 +74,7 @@ Move a queue item from one position to another. Since index 0 contains the curre
 ### Syntax
 
 ```typescript
-reorderQueue(currentQueuedSlotNumber: number, newQueuedSlotNumber: number, channelNumber?: number): QueueManipulationResult
+reorderQueue(currentQueuedSlotNumber: number, newQueuedSlotNumber: number, channelNumber: number = 0): QueueManipulationResult
 ```
 
 ### Parameters
@@ -120,7 +120,7 @@ Remove all items from the queue except the currently playing audio.
 ### Syntax
 
 ```typescript
-clearQueueAfterCurrent(channelNumber?: number): QueueManipulationResult
+clearQueueAfterCurrent(channelNumber: number = 0): QueueManipulationResult
 ```
 
 ### Parameters
@@ -160,7 +160,7 @@ Swap the positions of two items in the queue. Since index 0 contains the current
 ### Syntax
 
 ```typescript
-swapQueueItems(slotA: number, slotB: number, channelNumber?: number): QueueManipulationResult
+swapQueueItems(slotA: number, slotB: number, channelNumber: number = 0): QueueManipulationResult
 ```
 
 ### Parameters
@@ -205,7 +205,7 @@ Get detailed information about a specific item in the queue.
 ### Syntax
 
 ```typescript
-getQueueItemInfo(queueSlotNumber: number, channelNumber?: number): QueueItem | null
+getQueueItemInfo(queueSlotNumber: number, channelNumber: number = 0): QueueItem | null
 ```
 
 ### Parameters
@@ -221,12 +221,12 @@ getQueueItemInfo(queueSlotNumber: number, channelNumber?: number): QueueItem | n
 
 ```typescript
 interface QueueItem {
-  duration: number;
-  fileName: string;
-  isCurrentlyPlaying: boolean;
-  isLooping: boolean;
-  src: string;
-  volume: number;
+  duration: number;            // Total audio duration in milliseconds
+  fileName: string;            // Extracted filename from the source URL
+  isCurrentlyPlaying: boolean; // Whether this item is currently playing
+  isLooping: boolean;          // Whether this item is set to loop
+  src: string;                 // Audio file source URL
+  volume: number;              // Volume level for this item (0-1)
 }
 ```
 
@@ -266,7 +266,7 @@ Get the total number of items in a channel's queue.
 ### Syntax
 
 ```typescript
-getQueueLength(channelNumber?: number): number
+getQueueLength(channelNumber: number = 0): number
 ```
 
 ### Parameters

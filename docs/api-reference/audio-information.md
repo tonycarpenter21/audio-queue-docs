@@ -9,12 +9,8 @@ Get detailed information about the currently playing audio on a specific channel
 ### Syntax
 
 ```typescript
-getCurrentAudioInfo(channelNumber?: number): AudioInfo | null
+getCurrentAudioInfo(channelNumber?: number = 0): AudioInfo | null
 ```
-
-### Parameters
-
-- `channelNumber` (number, optional): The channel number to query (defaults to 0)
 
 ### Returns
 
@@ -24,16 +20,16 @@ getCurrentAudioInfo(channelNumber?: number): AudioInfo | null
 
 ```typescript
 interface AudioInfo {
-  audioElement: HTMLAudioElement;
-  currentTime: number;
-  duration: number;
-  fileName: string;
-  isLooping: boolean;
-  isPaused: boolean;
-  isPlaying: boolean;
-  progress: number;
-  src: string;
-  volume: number;
+  currentTime: number;      // Current playback position in milliseconds
+  duration: number;         // Total audio duration in milliseconds
+  fileName: string;         // Extracted filename from the source URL
+  isLooping: boolean;       // Whether the audio is set to loop
+  isPaused: boolean;        // Whether the audio is currently paused
+  isPlaying: boolean;       // Whether the audio is currently playing
+  progress: number;         // Playback progress as a decimal (0-1)
+  remainingInQueue: number; // Number of audio files remaining in the queue after current
+  src: string;              // Audio file source URL
+  volume: number;            // Current volume level (0-1)
 }
 ```
 
@@ -57,6 +53,22 @@ if (audioInfo) {
 
 // For channel 0 (default), you can omit the channel number
 const info = getCurrentAudioInfo(); // Same as getCurrentAudioInfo(0)
+
+// Best practice: guard against null returns
+function safeGetAudioProgress(channel: number = 0): number {
+  const info = getCurrentAudioInfo(channel);
+  return info?.progress ?? 0; // Default to 0 if no audio
+}
+
+// Pro tip: use for responsive UI updates
+function updateUI(): void {
+  const info = getCurrentAudioInfo();
+  if (info && !info.isPaused) {
+    updateProgressBar(info.progress);
+    requestAnimationFrame(updateUI); // Continue if playing
+  }
+}
+requestAnimationFrame(updateUI);
 ```
 
 ### Real-world Usage
@@ -94,8 +106,8 @@ class AudioStatusDisplay {
           </div>
           <div class="audio-controls">
             <span class="volume">Volume: ${Math.round(audioInfo.volume * 100)}%</span>
-            <span class="status">${audioInfo.isPaused ? '⏸️ Paused' : '▶️ Playing'}</span>
-            ${audioInfo.isLooping ? '<span class="loop">🔁 Loop</span>' : ''}
+            <span class="status">${audioInfo.isPaused ? 'Paused' : 'Playing'}</span>
+            ${audioInfo.isLooping ? '<span class="loop">Loop</span>' : ''}
           </div>
         </div>
       `;
@@ -120,12 +132,12 @@ Get information about all active audio channels.
 ### Syntax
 
 ```typescript
-getAllChannelsInfo(): { [channelNumber: number]: AudioInfo | null }
+getAllChannelsInfo(): (AudioInfo | null)[]
 ```
 
 ### Returns
 
-- `Object`: Map of channel numbers to their current audio information
+- `(AudioInfo | null)[]`: Array of audio information objects (null for channels with no audio)
 
 ### Examples
 
@@ -140,7 +152,7 @@ await queueAudio('/audio/sfx.wav', 1);
 const allChannels = getAllChannelsInfo();
 
 console.log('All Channel Information:');
-Object.entries(allChannels).forEach(([channel, info]) => {
+allChannels.forEach((info, channel) => {
   if (info) {
     console.log(`Channel ${channel}: Playing ${info.fileName}`);
     console.log(`  Progress: ${Math.round((info.currentTime / info.duration) * 100)}%`);
@@ -150,6 +162,22 @@ Object.entries(allChannels).forEach(([channel, info]) => {
     console.log(`Channel ${channel}: No audio`);
   }
 });
+
+// Best practice: filter active channels only
+function getActiveChannels(): number[] {
+  const allChannels = getAllChannelsInfo();
+  return allChannels
+    .map((info, index) => ({ info, index }))
+    .filter(({ info }) => info !== null && info.isPlaying)
+    .map(({ index }) => index);
+}
+
+// Pro tip: monitor channel utilization
+function getChannelUtilization(): { active: number; total: number } {
+  const channels = getAllChannelsInfo();
+  const active = channels.filter(info => info !== null).length;
+  return { active, total: channels.length };
+}
 ```
 
 ### Multi-Channel Dashboard
@@ -184,7 +212,7 @@ class MultiChannelDashboard {
       if (channelInfo) {
         const progress = Math.round((channelInfo.currentTime / channelInfo.duration) * 100);
         const volume = Math.round(channelInfo.volume * 100);
-        const status = channelInfo.isPaused ? '⏸️ Paused' : '▶️ Playing';
+        const status = channelInfo.isPaused ? 'Paused' : 'Playing';
         
         dashboardHTML += `
           <div class="channel-info active">
@@ -224,36 +252,32 @@ Get a complete snapshot of the current queue state for a specific channel.
 ### Syntax
 
 ```typescript
-getQueueSnapshot(channelNumber?: number): QueueSnapshot
+getQueueSnapshot(channelNumber?: number = 0): QueueSnapshot | null
 ```
-
-### Parameters
-
-- `channelNumber` (number, optional): The channel number to query (defaults to 0)
 
 ### Returns
 
-- `QueueSnapshot`: Complete queue information
+- `QueueSnapshot | null`: Complete queue information, or `null` if channel doesn't exist
 
 ### QueueSnapshot Properties
 
 ```typescript
 interface QueueSnapshot {
-  channelNumber: number;
-  items: QueueItem[];
-  totalItems: number;
-  currentlyPlaying: string | null;
-  isChannelActive: boolean;
-  isPaused: boolean;
-  volume: number;
+  channelNumber: number; // Channel number this snapshot represents
+  currentIndex: number;  // Zero-based index of the currently playing item
+  isPaused: boolean;     // Whether the current audio is paused
+  items: QueueItem[];    // Array of audio items in the queue with their metadata
+  totalItems: number;    // Total number of items in the queue
+  volume: number;        // Current volume level for the channel (0-1)
 }
 
 interface QueueItem {
-  fileName: string;
-  duration: number;
-  isCurrentlyPlaying: boolean;
-  isLooping: boolean;
-  position: number;
+  duration: number;            // Total audio duration in milliseconds
+  fileName: string;            // Extracted filename from the source URL
+  isCurrentlyPlaying: boolean; // Whether this item is currently playing
+  isLooping: boolean;          // Whether this item is set to loop
+  src: string;                 // Audio file source URL
+  volume: number;              // Volume level for this item (0-1)
 }
 ```
 
@@ -270,64 +294,36 @@ await queueAudio('/audio/track3.mp3');
 // Get queue snapshot from channel 0 (using default fallback)
 const snapshot = getQueueSnapshot(); // Same as getQueueSnapshot(0)
 
-console.log(`Total items: ${snapshot.totalItems}`);
-console.log(`Currently playing: ${snapshot.currentlyPlaying}`);
-console.log(`Channel active: ${snapshot.isChannelActive}`);
+if (snapshot) {
+  console.log(`Total items: ${snapshot.totalItems}`);
+  console.log(`Current index: ${snapshot.currentIndex}`);
+  console.log(`Is paused: ${snapshot.isPaused}`);
 
-snapshot.items.forEach((item, index) => {
-  const status = item.isCurrentlyPlaying ? '▶️ Playing' : `#${item.position}`;
-  console.log(`${status}: ${item.fileName} (${item.duration}ms)`);
-});
+  snapshot.items.forEach((item, index) => {
+    const status = item.isCurrentlyPlaying ? 'Playing' : `#${index}`;
+    console.log(`${status}: ${item.fileName} (${item.duration}ms)`);
+  });
+}
 
 // For other channels, you must specify the channel number
 const channel1Snapshot = getQueueSnapshot(1);
 const channel2Snapshot = getQueueSnapshot(2);
-```
 
-### Channel 0 Fallback Examples
+// Best practice: calculate remaining queue duration
+function getRemainingQueueTime(channel: number = 0): number {
+  const snapshot = getQueueSnapshot(channel);
+  if (!snapshot) return 0;
+  
+  return snapshot.items
+    .filter(item => !item.isCurrentlyPlaying)
+    .reduce((total, item) => total + item.duration, 0);
+}
 
-```typescript
-import { getQueueSnapshot, queueAudio } from 'audio-channel-queue';
-
-class QueueMonitor {
-  monitorDefaultChannel(): void {
-    // These are equivalent - both query channel 0
-    const snapshot1 = getQueueSnapshot();    // Uses channel 0 fallback
-    
-    console.log('Default channel queue:');
-    console.log(`- Fallback method: ${snapshot1.totalItems} items`);
-    console.log(`- Explicit method: ${snapshot2.totalItems} items`);
-    console.log(`- Results match: ${snapshot1.totalItems === snapshot2.totalItems}`);
-  }
-
-  monitorMultipleChannels(): void {
-    // Monitor channel 0 using fallback
-    const defaultChannel = getQueueSnapshot();
-    console.log(`Channel 0 (default): ${defaultChannel.totalItems} items`);
-    
-    // Monitor other channels explicitly
-    for (let channel = 1; channel <= 3; channel++) {
-      const snapshot = getQueueSnapshot(channel);
-      console.log(`Channel ${channel}: ${snapshot.totalItems} items`);
-    }
-  }
-
-  compareChannels(): void {
-    const channels = [
-      { number: 0, snapshot: getQueueSnapshot() },      // Using fallback
-      { number: 1, snapshot: getQueueSnapshot(1) },     // Must be explicit
-      { number: 2, snapshot: getQueueSnapshot(2) },     // Must be explicit
-    ];
-
-    channels.forEach(({ number, snapshot }) => {
-      console.log(`Channel ${number}:`);
-      console.log(`  - Active: ${snapshot.isChannelActive}`);
-      console.log(`  - Playing: ${snapshot.currentlyPlaying || 'Nothing'}`);
-      console.log(`  - Queue size: ${snapshot.totalItems}`);
-      console.log(`  - Paused: ${snapshot.isPaused}`);
-      console.log(`  - Volume: ${Math.round(snapshot.volume * 100)}%`);
-    });
-  }
+// Pro tip: detect stalled queues
+function isQueueStalled(channel: number = 0): boolean {
+  const snapshot = getQueueSnapshot(channel);
+  const audioInfo = getCurrentAudioInfo(channel);
+  return snapshot ? snapshot.totalItems > 0 && !audioInfo && !snapshot.isPaused : false;
 }
 ```
 
@@ -357,17 +353,17 @@ class PlaylistViewer {
     this.updateStats(snapshot);
   }
 
-  private updatePlaylistDisplay(snapshot: QueueSnapshot): void {
+  private updatePlaylistDisplay(snapshot: QueueSnapshot | null): void {
     if (!this.playlistElement) return;
 
-    if (snapshot.totalItems === 0) {
+    if (!snapshot || snapshot.totalItems === 0) {
       this.playlistElement.innerHTML = '<div class="no-playlist">No songs in queue</div>';
       return;
     }
 
     let playlistHTML = '<h3>Current Playlist</h3><ul class="playlist-items">';
     
-    snapshot.items.forEach((item) => {
+    snapshot.items.forEach((item, index) => {
       const statusIcon = item.isCurrentlyPlaying ? '▶️' : '⏳';
       const itemClass = item.isCurrentlyPlaying ? 'playing' : 'queued';
       const duration = Math.round(item.duration / 1000);
@@ -375,7 +371,7 @@ class PlaylistViewer {
       playlistHTML += `
         <li class="playlist-item ${itemClass}">
           <span class="status">${statusIcon}</span>
-          <span class="position">${item.position}.</span>
+          <span class="position">${index + 1}.</span>
           <span class="filename">${item.fileName}</span>
           <span class="duration">${duration}s</span>
         </li>
@@ -386,8 +382,13 @@ class PlaylistViewer {
     this.playlistElement.innerHTML = playlistHTML;
   }
 
-  private updateStats(snapshot: QueueSnapshot): void {
+  private updateStats(snapshot: QueueSnapshot | null): void {
     if (!this.statsElement) return;
+
+    if (!snapshot) {
+      this.statsElement.innerHTML = '<div class="no-stats">No queue data</div>';
+      return;
+    }
 
     const totalDuration = snapshot.items.reduce((sum, item) => sum + item.duration, 0);
     const totalMinutes = Math.round(totalDuration / 1000 / 60);
@@ -404,11 +405,11 @@ class PlaylistViewer {
         </div>
         <div class="stat">
           <span class="label">Channel Status:</span>
-          <span class="value">${snapshot.isChannelActive ? '🟢 Active' : '🔴 Inactive'}</span>
+          <span class="value">${snapshot.totalItems > 0 && !snapshot.isPaused ? 'Active' : 'Inactive'}</span>
         </div>
         <div class="stat">
           <span class="label">Now Playing:</span>
-          <span class="value">${snapshot.currentlyPlaying || 'None'}</span>
+          <span class="value">${snapshot.items.find(item => item.isCurrentlyPlaying)?.fileName || 'None'}</span>
         </div>
       </div>
     `;
@@ -416,130 +417,9 @@ class PlaylistViewer {
 }
 ```
 
-### Queue Analysis
-
-```typescript
-class QueueAnalyzer {
-  analyzeQueue(channel: number = 0): void {
-    // Use channel 0 fallback for default channel, explicit for others
-    const snapshot = channel === 0 ? getQueueSnapshot() : getQueueSnapshot(channel);
-    
-    console.log(`\n📊 Queue Analysis for Channel ${channel}:`);
-    console.log(`   Total Items: ${snapshot.totalItems}`);
-    console.log(`   Currently Playing: ${snapshot.currentlyPlaying || 'Nothing'}`);
-    console.log(`   Channel Active: ${snapshot.isChannelActive ? 'Yes' : 'No'}`);
-
-    if (snapshot.totalItems === 0) {
-      console.log('   Status: ✅ Queue is empty and ready for new audio');
-      return;
-    }
-
-    const totalDuration = snapshot.items.reduce((sum, item) => sum + item.duration, 0);
-    const avgDuration = totalDuration / snapshot.items.length;
-
-    console.log(`   Total Duration: ${Math.round(totalDuration / 1000)} seconds`);
-    console.log(`   Average Duration: ${Math.round(avgDuration / 1000)} seconds`);
-
-    // Queue health assessment
-    if (snapshot.totalItems > 10) {
-      console.log('   ⚠️  Warning: Large queue detected - may impact performance');
-    } else if (snapshot.totalItems > 5) {
-      console.log('   📈 Queue is moderately full');
-    } else {
-      console.log('   ✅ Queue size is optimal');
-    }
-
-    // Show queue items
-    console.log('\n   Queue Items:');
-    snapshot.items.forEach((item) => {
-      const status = item.isCurrentlyPlaying ? '🔊 Playing' : `#${item.position} Queued`;
-      const duration = Math.round(item.duration / 1000);
-      console.log(`     ${status}: ${item.fileName} (${duration}s)`);
-    });
-  }
-
-  monitorQueueHealth(): void {
-    setInterval(() => {
-      // Monitor default channel using fallback and channels 1-3 explicitly
-      for (let channel = 0; channel < 4; channel++) {
-        const snapshot = channel === 0 ? getQueueSnapshot() : getQueueSnapshot(channel);
-        
-        if (snapshot.totalItems > 15) {
-          console.warn(`🚨 Channel ${channel} queue overloaded: ${snapshot.totalItems} items`);
-        }
-      }
-    }, 5000); // Check every 5 seconds
-  }
-}
-```
-
-### Performance Monitoring
-
-```typescript
-class AudioPerformanceMonitor {
-  private metrics = {
-    memoryUsage: 0,
-    activeTracks: 0,
-    queueSizes: {} as { [channel: number]: number },
-    lastUpdate: Date.now()
-  };
-
-  startMonitoring(): void {
-    setInterval(() => {
-      this.updateMetrics();
-      this.checkPerformance();
-    }, 5000); // Check every 5 seconds
-  }
-
-  private updateMetrics(): void {
-    // Get memory usage (if available)
-    if ('memory' in performance) {
-      this.metrics.memoryUsage = (performance as any).memory.usedJSHeapSize;
-    }
-
-    // Count active tracks across all channels
-    const allChannels = getAllChannelsInfo();
-    this.metrics.activeTracks = Object.values(allChannels)
-      .filter(info => info !== null).length;
-
-    // Get queue sizes
-    for (let i = 0; i < 8; i++) { // Check 8 channels
-      const snapshot = i === 0 ? getQueueSnapshot() : getQueueSnapshot(i);
-      this.metrics.queueSizes[i] = snapshot.totalItems;
-    }
-
-    this.metrics.lastUpdate = Date.now();
-  }
-
-  private checkPerformance(): void {
-    // Warn if too many active tracks
-    if (this.metrics.activeTracks > 10) {
-      console.warn(`Performance Warning: ${this.metrics.activeTracks} active tracks`);
-    }
-
-    // Warn if queue sizes are getting large
-    const totalQueued = Object.values(this.metrics.queueSizes)
-      .reduce((sum, size) => sum + size, 0);
-      
-    if (totalQueued > 50) {
-      console.warn(`Performance Warning: ${totalQueued} total queued items`);
-    }
-
-    // Memory warning (if available)
-    if (this.metrics.memoryUsage > 100 * 1024 * 1024) { // 100MB
-      console.warn(`Memory Warning: ${(this.metrics.memoryUsage / 1024 / 1024).toFixed(1)}MB used`);
-    }
-  }
-
-  getMetrics() {
-    return { ...this.metrics };
-  }
-}
-```
-
 ## 🔗 Related Functions
 
-- **[Advanced Queue Manipulation](./advanced-queue-manipulation)** - Remove, reorder, and swap queue items
+- **[Advanced Queue Manipulation](../advanced/advanced-queue-manipulation)** - Remove, reorder, and swap queue items
 - **[Queue Management](./queue-management)** - Basic queue operations
 - **[Event Listeners](./event-listeners)** - Monitor audio and queue events
 - **[Types & Interfaces](./types-interfaces)** - TypeScript interface definitions 

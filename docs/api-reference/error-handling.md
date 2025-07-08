@@ -308,7 +308,7 @@ Manually retry the currently failed audio in a channel.
 #### Syntax
 
 ```typescript
-await retryFailedAudio(channelNumber?: number = 0): Promise<boolean>
+retryFailedAudio(channelNumber?: number = 0): Promise<boolean>
 ```
 
 #### Returns

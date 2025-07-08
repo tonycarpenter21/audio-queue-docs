@@ -9,12 +9,8 @@ Pauses audio playback on a specific channel.
 ### Syntax
 
 ```typescript
-pauseChannel(channelNumber: number): void
+pauseChannel(channelNumber?: number = 0): Promise<void>
 ```
-
-### Parameters
-
-- `channelNumber` (number): The channel number to pause (0-based index)
 
 ### Examples
 
@@ -22,34 +18,24 @@ pauseChannel(channelNumber: number): void
 import { pauseChannel, resumeChannel } from 'audio-channel-queue';
 
 // Pause music channel
-pauseChannel(0);
+await pauseChannel(0);
 
 // Pause sound effects channel
-pauseChannel(1);
-```
+await pauseChannel(1);
 
-### Real-world Usage
+// Best practice: handle pause with state tracking
+const pausedChannels = new Set<number>();
 
-```typescript
-class GameAudioController {
-  private readonly MUSIC_CHANNEL = 0;
-  private readonly SFX_CHANNEL = 1;
+async function pauseAndTrack(channel: number): Promise<void> {
+  await pauseChannel(channel);
+  pausedChannels.add(channel);
+}
 
-  pauseGame(): void {
-    // Pause all game audio when game is paused
-    pauseChannel(this.MUSIC_CHANNEL);
-    pauseChannel(this.SFX_CHANNEL);
-  }
-
-  pauseMusicOnly(): void {
-    // Keep SFX playing but pause background music
-    pauseChannel(this.MUSIC_CHANNEL);
-  }
-
-  handleUserInteraction(): void {
-    // Pause SFX during important dialog
-    pauseChannel(this.SFX_CHANNEL);
-  }
+// Pro tip: pause non-critical audio during voice
+async function prioritizeVoice(): Promise<void> {
+  await pauseChannel(0); // Pause music
+  await pauseChannel(1); // Pause SFX
+  // Keep voice channel (2) playing
 }
 ```
 
@@ -60,12 +46,8 @@ Resumes audio playback on a specific channel.
 ### Syntax
 
 ```typescript
-resumeChannel(channelNumber: number): void
+resumeChannel(channelNumber?: number = 0): Promise<void>
 ```
-
-### Parameters
-
-- `channelNumber` (number): The channel number to resume (0-based index)
 
 ### Examples
 
@@ -73,14 +55,14 @@ resumeChannel(channelNumber: number): void
 import { pauseChannel, resumeChannel } from 'audio-channel-queue';
 
 // Resume music channel
-resumeChannel(0);
+await resumeChannel(0);
 
 // Resume after temporary pause
-function temporaryPause(): void {
-  pauseChannel(1);
+async function temporaryPause(): Promise<void> {
+  await pauseChannel(1);
   
-  setTimeout(() => {
-    resumeChannel(1); // Resume after 3 seconds
+  setTimeout(async () => {
+    await resumeChannel(1); // Resume after 3 seconds
   }, 3000);
 }
 ```
@@ -92,12 +74,8 @@ Toggles the pause state of a specific channel.
 ### Syntax
 
 ```typescript
-togglePauseChannel(channelNumber: number): void
+togglePauseChannel(channelNumber?: number = 0): Promise<void>
 ```
-
-### Parameters
-
-- `channelNumber` (number): The channel number to toggle (0-based index)
 
 ### Examples
 
@@ -105,18 +83,38 @@ togglePauseChannel(channelNumber: number): void
 import { togglePauseChannel } from 'audio-channel-queue';
 
 // Toggle music playback with a single function
-function toggleMusic(): void {
-  togglePauseChannel(0); // Pauses if playing, resumes if paused
+async function toggleMusic(): Promise<void> {
+  await togglePauseChannel(0); // Pauses if playing, resumes if paused
 }
 
 // Create a music player with play/pause button
 class SimpleMusicPlayer {
   private readonly MUSIC_CHANNEL = 0;
 
-  onPlayPauseClick(): void {
-    togglePauseChannel(this.MUSIC_CHANNEL);
+  async onPlayPauseClick(): Promise<void> {
+    await togglePauseChannel(this.MUSIC_CHANNEL);
   }
 }
+
+// Best practice: debounce rapid toggles
+let toggleTimeout: number | null = null;
+
+async function safeTogglePause(channel: number): Promise<void> {
+  if (toggleTimeout) clearTimeout(toggleTimeout);
+  
+  toggleTimeout = setTimeout(async () => {
+    await togglePauseChannel(channel);
+    toggleTimeout = null;
+  }, 100); // 100ms debounce
+}
+
+// Pro tip: prevent space bar from scrolling
+document.addEventListener('keydown', async (e) => {
+  if (e.code === 'Space' && e.target === document.body) {
+    e.preventDefault(); // Stop page scroll
+    await togglePauseChannel(0);
+  }
+});
 ```
 
 ## pauseAllChannels
@@ -126,7 +124,7 @@ Pauses audio playback on all channels simultaneously.
 ### Syntax
 
 ```typescript
-pauseAllChannels(): void
+pauseAllChannels(): Promise<void>
 ```
 
 ### Examples
@@ -135,37 +133,29 @@ pauseAllChannels(): void
 import { pauseAllChannels, resumeAllChannels } from 'audio-channel-queue';
 
 // Global pause functionality
-function pauseAllAudio(): void {
-  pauseAllChannels();
+async function pauseAllAudio(): Promise<void> {
+  await pauseAllChannels();
 }
 
 // Pause everything when app loses focus
-window.addEventListener('blur', () => {
-  pauseAllChannels();
+window.addEventListener('blur', async () => {
+  await pauseAllChannels();
 });
-```
 
-### Real-world Usage
-
-```typescript
-class ApplicationAudioManager {
-  pauseForPhoneCall(): void {
-    // Pause all audio when phone call is detected (mobile)
-    pauseAllChannels();
+// Best practice: use Page Visibility API for better battery life
+document.addEventListener('visibilitychange', async () => {
+  if (document.hidden) {
+    await pauseAllChannels(); // Save battery when tab not visible
+  } else {
+    await resumeAllChannels(); // Resume when user returns
   }
+});
 
-  pauseForNotification(): void {
-    // Pause all audio for important system notifications
-    pauseAllChannels();
-  }
-
-  handleVisibilityChange(): void {
-    if (document.hidden) {
-      pauseAllChannels(); // Pause when tab is hidden
-    } else {
-      resumeAllChannels(); // Resume when tab becomes visible
-    }
-  }
+// Pro tip: mobile app lifecycle handling
+if ('onpause' in document) {
+  // Cordova/Capacitor mobile apps
+  document.addEventListener('pause', async () => await pauseAllChannels());
+  document.addEventListener('resume', async () => await resumeAllChannels());
 }
 ```
 
@@ -176,7 +166,7 @@ Resumes audio playback on all channels simultaneously.
 ### Syntax
 
 ```typescript
-resumeAllChannels(): void
+resumeAllChannels(): Promise<void>
 ```
 
 ### Examples
@@ -185,13 +175,13 @@ resumeAllChannels(): void
 import { pauseAllChannels, resumeAllChannels } from 'audio-channel-queue';
 
 // Global resume functionality
-function resumeAllAudio(): void {
-  resumeAllChannels();
+async function resumeAllAudio(): Promise<void> {
+  await resumeAllChannels();
 }
 
 // Resume when app regains focus
-window.addEventListener('focus', () => {
-  resumeAllChannels();
+window.addEventListener('focus', async () => {
+  await resumeAllChannels();
 });
 ```
 
@@ -202,7 +192,7 @@ Toggles the pause state of all channels simultaneously.
 ### Syntax
 
 ```typescript
-togglePauseAllChannels(): void
+togglePauseAllChannels(): Promise<void>
 ```
 
 ### Examples
@@ -211,15 +201,15 @@ togglePauseAllChannels(): void
 import { togglePauseAllChannels } from 'audio-channel-queue';
 
 // Master play/pause control
-function masterToggle(): void {
-  togglePauseAllChannels();
+async function masterToggle(): Promise<void> {
+  await togglePauseAllChannels();
 }
 
 // Keyboard shortcut for space bar
-document.addEventListener('keydown', (event) => {
+document.addEventListener('keydown', async (event) => {
   if (event.code === 'Space' && !event.target.matches('input')) {
     event.preventDefault();
-    togglePauseAllChannels();
+    await togglePauseAllChannels();
   }
 });
 ```
@@ -231,12 +221,8 @@ Checks if a specific channel is currently paused.
 ### Syntax
 
 ```typescript
-isChannelPaused(channelNumber: number): boolean
+isChannelPaused(channelNumber?: number = 0): boolean
 ```
-
-### Parameters
-
-- `channelNumber` (number): The channel number to check (0-based index)
 
 ### Returns
 
@@ -248,12 +234,12 @@ isChannelPaused(channelNumber: number): boolean
 import { isChannelPaused, pauseChannel, resumeChannel } from 'audio-channel-queue';
 
 // Conditional pause/resume logic
-function smartToggle(channel: number): void {
+async function smartToggle(channel: number): Promise<void> {
   if (isChannelPaused(channel)) {
-    resumeChannel(channel);
+    await resumeChannel(channel);
     console.log(`Channel ${channel} resumed`);
   } else {
-    pauseChannel(channel);
+    await pauseChannel(channel);
     console.log(`Channel ${channel} paused`);
   }
 }
@@ -265,21 +251,41 @@ function updatePlayButton(channel: number): void {
     button.textContent = isChannelPaused(channel) ? '▶️ Play' : '⏸️ Pause';
   }
 }
+
+// Best practice: sync UI state on animation frame
+function syncUIWithAudioState(): void {
+  requestAnimationFrame(() => {
+    const isPaused = isChannelPaused(0);
+    document.querySelectorAll('.play-button').forEach(btn => {
+      btn.classList.toggle('playing', !isPaused);
+      btn.classList.toggle('paused', isPaused);
+    });
+  });
+}
+
+// Pro tip: prevent race conditions with state checks
+async function safeResume(channel: number): Promise<void> {
+  if (!isChannelPaused(channel)) {
+    console.warn(`Channel ${channel} already playing`);
+    return;
+  }
+  await resumeChannel(channel);
+}
 ```
 
 ## getAllChannelsPauseState
 
-Gets the pause state for all channels.
+Gets the pause state of all channels.
 
 ### Syntax
 
 ```typescript
-getAllChannelsPauseState(): { [channelNumber: number]: boolean }
+getAllChannelsPauseState(): boolean[]
 ```
 
 ### Returns
 
-- `Object`: Map of channel numbers to their pause states
+- `boolean[]`: Array of boolean values indicating pause state for each channel (index corresponds to channel number)
 
 ### Examples
 
@@ -288,13 +294,14 @@ import { getAllChannelsPauseState } from 'audio-channel-queue';
 
 // Get pause state for all channels
 const pauseStates = getAllChannelsPauseState();
-console.log(pauseStates); // { 0: false, 1: true, 2: false }
+console.log(pauseStates); // [false, true, false, false, false, false, false, false]
+// Channel 0: playing, Channel 1: paused, Channel 2: playing, etc.
 
 // Update UI for all channels
 function updateAllPlayButtons(): void {
   const states = getAllChannelsPauseState();
   
-  Object.entries(states).forEach(([channel, isPaused]) => {
+  states.forEach((isPaused, channel) => {
     const button = document.getElementById(`play-button-${channel}`);
     if (button) {
       button.textContent = isPaused ? '▶️' : '⏸️';
@@ -304,146 +311,311 @@ function updateAllPlayButtons(): void {
 }
 ```
 
-### Real-world Usage
+## pauseWithFade
+
+Pauses the currently playing audio in a specific channel with a smooth volume fade out.
+
+### Syntax
 
 ```typescript
-class AudioDashboard {
-  private updateInterval: number | null = null;
-
-  startMonitoring(): void {
-    this.updateInterval = setInterval(() => {
-      const states = getAllChannelsPauseState();
-      this.updateChannelIndicators(states);
-    }, 100);
-  }
-
-  stopMonitoring(): void {
-    if (this.updateInterval) {
-      clearInterval(this.updateInterval);
-      this.updateInterval = null;
-    }
-  }
-
-  private updateChannelIndicators(states: { [key: number]: boolean }): void {
-    Object.entries(states).forEach(([channel, isPaused]) => {
-      const indicator = document.querySelector(`[data-channel="${channel}"]`);
-      if (indicator) {
-        indicator.classList.toggle('paused', isPaused);
-        indicator.classList.toggle('playing', !isPaused);
-      }
-    });
-  }
-}
+pauseWithFade(fadeType?: FadeType, channelNumber?: number, duration?: number): Promise<void>
 ```
 
-## Advanced Pause/Resume Patterns
+### Parameters
+
+- `fadeType` (FadeType, optional): Type of fade transition to apply (defaults to `FadeType.Gentle`)
+- `channelNumber` (number, optional): The channel number to pause (defaults to 0)
+- `duration` (number, optional): Custom fade duration in milliseconds (uses fadeType default if not provided)
+
+### Examples
+
+```typescript
+import { pauseWithFade, FadeType } from 'audio-channel-queue';
+
+// Pause with default gentle fade (FadeType.Gentle, channel 0, 800ms)
+await pauseWithFade();
+
+// Pause with dramatic fade on channel 1 800mx
+await pauseWithFade(FadeType.Dramatic, 1);
+
+// Pause with linear fade on channel 0 with custom 500ms duration
+await pauseWithFade(FadeType.Linear, 0, 500);
+
+// Best practice: use FadeType enum
+await pauseWithFade(FadeType.Gentle); // 800ms ease-out on channel 0
+await pauseWithFade(FadeType.Dramatic); // 800ms ease-in on channel 0
+await pauseWithFade(FadeType.Linear); // 800ms linear on channel 0
+```
+
+## resumeWithFade
+
+Resumes the currently paused audio in a specific channel with a smooth volume fade in. Uses the complementary fade curve automatically based on the pause fade type, or allows override.
+
+### Syntax
+
+```typescript
+resumeWithFade(fadeType?: FadeType, channelNumber?: number, duration?: number): Promise<void>
+```
+
+### Parameters
+
+- `fadeType` (FadeType, optional): Override fade type (if not provided, uses the stored fade type from pause)
+- `channelNumber` (number, optional): The channel number to resume (defaults to 0)
+- `duration` (number, optional): Custom fade duration in milliseconds (uses stored or fadeType default if not provided)
+
+### Examples
+
+```typescript
+import { pauseWithFade, resumeWithFade, FadeType } from 'audio-channel-queue';
+
+// Pause then resume with automatic paired curves
+await pauseWithFade(FadeType.Gentle); // Pauses with ease-out
+await resumeWithFade(); // Resumes with ease-in (complementary curve)
+
+// Override with different fade type
+await pauseWithFade(FadeType.Gentle);
+await resumeWithFade(FadeType.Dramatic); // Override with dramatic fade
+
+// Resume with custom duration
+await resumeWithFade(undefined, 0, 1000); // Use stored fade type, channel 0, 1 second duration
+
+// Best practice: let the library handle curve pairing
+await pauseWithFade(FadeType.Gentle, 0, 500);
+await resumeWithFade(); // Automatically uses gentle fade with 500ms duration
+```
+
+## togglePauseWithFade
+
+Toggles pause/resume state for a specific channel with integrated fade transitions.
+
+### Syntax
+
+```typescript
+togglePauseWithFade(fadeType?: FadeType, channelNumber?: number, duration?: number): Promise<void>
+```
+
+### Parameters
+
+- `fadeType` (FadeType, optional): Type of fade transition to apply when pausing (defaults to FadeType.Gentle)
+- `channelNumber` (number, optional): The channel number to toggle (defaults to 0)
+- `duration` (number, optional): Custom fade duration in milliseconds (uses fadeType default if not provided)
+
+### Examples
+
+```typescript
+import { togglePauseWithFade, FadeType } from 'audio-channel-queue';
+
+// Toggle with default gentle fade
+await togglePauseWithFade();
+
+// Toggle with dramatic fade on channel 1
+await togglePauseWithFade(FadeType.Dramatic, 1);
+
+// Toggle with custom duration on channel 0
+await togglePauseWithFade(FadeType.Linear, 0, 300);
+```
+
+## pauseAllWithFade
+
+Pauses all currently playing audio across all channels with smooth volume fade.
+
+### Syntax
+
+```typescript
+pauseAllWithFade(fadeType?: FadeType, duration?: number): Promise<void>
+```
+
+### Parameters
+
+- `fadeType` (FadeType, optional): Type of fade transition to apply to all channels (defaults to FadeType.Gentle)
+- `duration` (number, optional): Custom fade duration in milliseconds (uses fadeType default if not provided)
+
+### Examples
+
+```typescript
+import { pauseAllWithFade, FadeType } from 'audio-channel-queue';
+
+// Pause all channels with gentle fade
+await pauseAllWithFade();
+
+// Pause all with dramatic fade
+await pauseAllWithFade(FadeType.Dramatic);
+
+// Pause all with custom 1.2 second fade
+await pauseAllWithFade(FadeType.Gentle, 1200);
+```
+
+## resumeAllWithFade
+
+Resumes all currently paused audio across all channels with smooth volume fade. Uses automatically paired fade curves based on each channel's pause fade type, or allows override.
+
+### Syntax
+
+```typescript
+resumeAllWithFade(fadeType?: FadeType, duration?: number): Promise<void>
+```
+
+### Parameters
+
+- `fadeType` (FadeType, optional): Override fade type for all channels (if not provided, uses each channel's stored fade type)
+- `duration` (number, optional): Custom fade duration in milliseconds (uses stored or fadeType default if not provided)
+
+### Examples
+
+```typescript
+import { pauseAllWithFade, resumeAllWithFade, FadeType } from 'audio-channel-queue';
+
+// Resume all with their paired fade curves
+await resumeAllWithFade();
+
+// Override all channels with gentle fade
+await resumeAllWithFade(FadeType.Gentle);
+
+// Resume all with custom duration, keeping stored fade types
+await resumeAllWithFade(undefined, 600);
+```
+
+## togglePauseAllWithFade
+
+Toggles pause/resume state for all channels with integrated fade. If any channels are playing, all will be paused with fade. If all channels are paused, all will be resumed with fade.
+
+### Syntax
+
+```typescript
+togglePauseAllWithFade(fadeType?: FadeType, duration?: number): Promise<void>
+```
+
+### Parameters
+
+- `fadeType` (FadeType, optional): Type of fade transition to apply when pausing (defaults to FadeType.Gentle)
+- `duration` (number, optional): Custom fade duration in milliseconds (uses fadeType default if not provided)
+
+### Examples
+
+```typescript
+import { togglePauseAllWithFade, FadeType } from 'audio-channel-queue';
+
+// Toggle all with default gentle fade
+await togglePauseAllWithFade();
+
+// Toggle all with dramatic fade
+await togglePauseAllWithFade(FadeType.Dramatic);
+
+// Toggle with custom 600ms fade
+await togglePauseAllWithFade(FadeType.Gentle, 600);
+```
+
+## Fade Types
+
+The fade functions support three fade types via the `FadeType` enum:
+
+- **`FadeType.Gentle`** (default): Smooth, gradual transition
+  - Duration: 800ms
+  - Pause curve: ease-out (decelerates)
+  - Resume curve: ease-in (accelerates)
+  
+- **`FadeType.Dramatic`**: Quick, noticeable transition
+  - Duration: 800ms  
+  - Pause curve: ease-in (accelerates)
+  - Resume curve: ease-out (decelerates)
+  
+- **`FadeType.Linear`**: Constant rate transition
+  - Duration: 800ms
+  - Both curves: linear
+
+## Real-world Usage
 
 ### 1. Smart Auto-Pause
 
 Automatically pause audio based on system events:
 
 ```typescript
+import { pauseAllChannels, resumeChannel, getAllChannelsPauseState } from 'audio-channel-queue';
+
 class SmartAudioManager {
   private wasPlayingBeforePause: { [channel: number]: boolean } = {};
 
   setupAutoPause(): void {
     // Auto-pause on visibility change
-    document.addEventListener('visibilitychange', () => {
+    document.addEventListener('visibilitychange', async () => {
       if (document.hidden) {
-        this.smartPauseAll();
+        await this.smartPauseAll();
       } else {
-        this.smartResumeAll();
+        await this.smartResumeAll();
       }
     });
-
-    // Auto-pause on low battery (if supported)
-    if ('getBattery' in navigator) {
-      (navigator as any).getBattery().then((battery: any) => {
-        battery.addEventListener('levelchange', () => {
-          if (battery.level < 0.1) { // Below 10%
-            this.smartPauseAll();
-          }
-        });
-      });
-    }
   }
 
-  private smartPauseAll(): void {
+  private async smartPauseAll(): Promise<void> {
     const states = getAllChannelsPauseState();
     
     // Remember which channels were playing
-    Object.entries(states).forEach(([channel, isPaused]) => {
-      this.wasPlayingBeforePause[parseInt(channel)] = !isPaused;
+    states.forEach((isPaused, channel) => {
+      this.wasPlayingBeforePause[channel] = !isPaused;
     });
     
-    pauseAllChannels();
+    await pauseAllChannels();
   }
 
-  private smartResumeAll(): void {
+  private async smartResumeAll(): Promise<void> {
     // Only resume channels that were playing before pause
-    Object.entries(this.wasPlayingBeforePause).forEach(([channel, wasPlaying]) => {
-      if (wasPlaying) {
-        resumeChannel(parseInt(channel));
-      }
-    });
+    const resumePromises = Object.entries(this.wasPlayingBeforePause)
+      .filter(([_, wasPlaying]) => wasPlaying)
+      .map(([channel]) => resumeChannel(parseInt(channel)));
     
+    await Promise.all(resumePromises);
     this.wasPlayingBeforePause = {};
   }
 }
 ```
 
-### 2. Fade Pause/Resume
+### 2. Advanced Fade Scenarios
 
-Create smooth transitions when pausing/resuming:
+Create complex fade behaviors:
 
 ```typescript
-async function fadeOutAndPause(channel: number, duration: number = 1000): Promise<void> {
-  const originalVolume = getChannelVolume(channel);
-  const steps = 20;
-  const stepDuration = duration / steps;
-  const volumeStep = originalVolume / steps;
+import { pauseWithFade, resumeWithFade, FadeType, isChannelPaused } from 'audio-channel-queue';
 
-  return new Promise((resolve) => {
-    let currentStep = 0;
-    
-    const interval = setInterval(() => {
-      currentStep++;
-      const newVolume = originalVolume - (volumeStep * currentStep);
-      setChannelVolume(channel, Math.max(0, newVolume));
-      
-      if (currentStep >= steps) {
-        clearInterval(interval);
-        pauseChannel(channel);
-        setChannelVolume(channel, originalVolume); // Restore volume for next play
-        resolve();
-      }
-    }, stepDuration);
-  });
+// Smooth cross-fade between channels
+async function crossFadeChannels(fadeOutChannel: number, fadeInChannel: number): Promise<void> {
+  // Start both operations simultaneously
+  await Promise.all([
+    pauseWithFade(FadeType.Gentle, fadeOutChannel, 1000),
+    resumeWithFade(FadeType.Gentle, fadeInChannel, 1000)
+  ]);
 }
 
-async function resumeAndFadeIn(channel: number, duration: number = 1000): Promise<void> {
-  const targetVolume = getChannelVolume(channel);
-  setChannelVolume(channel, 0);
-  resumeChannel(channel);
+// Progressive pause across multiple channels
+async function cascadePause(channels: number[], delayMs: number = 200): Promise<void> {
+  const pausePromises: Promise<void>[] = [];
   
-  const steps = 20;
-  const stepDuration = duration / steps;
-  const volumeStep = targetVolume / steps;
-
-  return new Promise((resolve) => {
-    let currentStep = 0;
-    
-    const interval = setInterval(() => {
-      currentStep++;
-      const newVolume = volumeStep * currentStep;
-      setChannelVolume(channel, Math.min(targetVolume, newVolume));
-      
-      if (currentStep >= steps) {
-        clearInterval(interval);
+  for (let i = 0; i < channels.length; i++) {
+    const channel = channels[i];
+    const promise = new Promise<void>((resolve) => {
+      setTimeout(async () => {
+        await pauseWithFade(FadeType.Gentle, channel, 600);
         resolve();
-      }
-    }, stepDuration);
-  });
+      }, i * delayMs);
+    });
+    pausePromises.push(promise);
+  }
+  
+  await Promise.all(pausePromises);
+}
+
+// Reactive fade based on user proximity
+class ProximityFader {
+  async adjustForDistance(channel: number, distance: number, maxDistance: number): Promise<void> {
+    const normalizedDistance = Math.min(distance / maxDistance, 1);
+    
+    if (normalizedDistance >= 0.8 && !isChannelPaused(channel)) {
+      // Fade out when far away
+      await pauseWithFade(FadeType.Linear, channel, 2000);
+    } else if (normalizedDistance < 0.8 && isChannelPaused(channel)) {
+      // Fade in when getting closer
+      await resumeWithFade(FadeType.Linear, channel, 2000);
+    }
+  }
 }
 ```
 
@@ -452,6 +624,8 @@ async function resumeAndFadeIn(channel: number, duration: number = 1000): Promis
 Pause based on application state:
 
 ```typescript
+import { pauseAllChannels, pauseChannel } from 'audio-channel-queue';
+
 class ConditionalPauseManager {
   private shouldAutoPause: boolean = true;
   private userPreferences = {
@@ -464,26 +638,26 @@ class ConditionalPauseManager {
     this.userPreferences[type] = enabled;
   }
 
-  conditionalPause(reason: string): void {
+  async conditionalPause(reason: string): Promise<void> {
     if (!this.shouldAutoPause) return;
 
     switch (reason) {
       case 'low-battery':
         if (this.userPreferences.pauseOnLowBattery) {
-          pauseAllChannels();
+          await pauseAllChannels();
         }
         break;
       
       case 'phone-call':
         if (this.userPreferences.pauseOnCall) {
-          pauseAllChannels();
+          await pauseAllChannels();
         }
         break;
       
       case 'notification':
         if (this.userPreferences.pauseOnNotification) {
           // Only pause non-essential channels
-          pauseChannel(0); // Background music
+          await pauseChannel(0); // Background music
           // Keep voice/SFX channels playing
         }
         break;
@@ -498,3 +672,14 @@ class ConditionalPauseManager {
     this.shouldAutoPause = false;
   }
 } 
+```
+
+## Next Steps
+
+Now that you understand the Pause & Resume system, explore:
+
+- **[Advanced Queue Manipulation](../advanced/advanced-queue-manipulation.md)** - Precise queue control and monitoring
+- **[Audio Information](./audio-information.md)** - Get real-time audio data
+- **[Queue Management](./queue-management.md)** - Control audio queues
+- **[Volume Control](./volume-control.md)** - Manage audio levels
+- **[Examples](../getting-started/basic-usage)** - Real-world event handling patterns 

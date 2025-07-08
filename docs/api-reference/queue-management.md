@@ -15,7 +15,7 @@ Add an audio file to the end of a queue and start playing it automatically.
 ### Syntax
 
 ```typescript
-await queueAudio(audioFile: string, channelNumber?: number = 0, options?: AudioQueueOptions): Promise<void>
+queueAudio(audioFile: string, channelNumber?: number = 0, options?: AudioQueueOptions): Promise<void>
 ```
 
 ### AudioQueueOptions
@@ -90,7 +90,7 @@ Add an audio file to the **front** of the queue (plays after current audio finis
 ### Syntax
 
 ```typescript
-await queueAudioPriority(audioFile: string, channelNumber?: number = 0, options?: AudioQueueOptions): Promise<void>
+queueAudioPriority(audioFile: string, channelNumber?: number = 0, options?: AudioQueueOptions): Promise<void>
 ```
 
 ### Examples
@@ -133,7 +133,7 @@ Stop the currently playing audio in a specific channel and automatically start t
 ### Syntax
 
 ```typescript
-await stopCurrentAudioInChannel(channelNumber?: number = 0): Promise<void>
+stopCurrentAudioInChannel(channelNumber?: number = 0): Promise<void>
 ```
 
 ### Examples
@@ -211,7 +211,7 @@ Stop all audio across all channels. Nuclear option!
 ### Syntax
 
 ```typescript
-await stopAllAudio(): Promise<void>
+stopAllAudio(): Promise<void>
 ```
 
 ### Examples
@@ -237,7 +237,7 @@ Destroys a specific channel, clearing its queue and removing all event listeners
 ### Syntax
 
 ```typescript
-await destroyChannel(channelNumber: number = 0): Promise<void>
+destroyChannel(channelNumber: number = 0): Promise<void>
 ```
 
 ### Examples

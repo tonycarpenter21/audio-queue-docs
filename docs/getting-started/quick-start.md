@@ -92,15 +92,15 @@ Control the volume of individual channels or all channels at once:
 import { setChannelVolume, setAllChannelsVolume, getChannelVolume } from 'audio-channel-queue';
 
 // Set individual channel volumes
-setChannelVolume(0, 0.2);  // Background music: 20%
-setChannelVolume(1, 0.9);  // Sound effects: 90%
+await setChannelVolume(0, 0.2);  // Background music: 20%
+await setChannelVolume(1, 0.9);  // Sound effects: 90%
 
 // Check current volume
 const bgVolume = getChannelVolume(0);
 console.log(`Background volume: ${bgVolume * 100}%`);
 
 // Set all channels to the same volume
-setAllChannelsVolume(0.5);  // All channels: 50%
+await setAllChannelsVolume(0.5);  // All channels: 50%
 ```
 
 ## 📊 Step 5: Real-time Event Monitoring
@@ -167,7 +167,7 @@ await queueAudioPriority('./voice/important-announcement.mp3', 0);
 await stopCurrentAudioInChannel(0);
 
 // Clear entire queue for emergency
-// stopAllAudioInChannel(0);
+// await stopAllAudioInChannel(0);
 ```
 
 ## 🎮 Complete Example: Simple Game Audio
@@ -205,35 +205,35 @@ class GameAudio {
     });
   }
 
-  async startGame() {
+  async startGame(): Promise<void> {
     // Start background music
     await queueAudio('./music/game-theme.mp3', 0, { loop: true });
     console.log('🎮 Game started!');
   }
 
-  async playerJump() {
+  async playerJump(): Promise<void> {
     // Quick sound effect
     await queueAudio('./sfx/jump.wav', 1);
   }
 
-  async playerExplode() {
+  async playerExplode(): Promise<void> {
     // Explosion sound
     await queueAudio('./sfx/explosion.wav', 1);
   }
 
-  async gameOver() {
+  async gameOver(): Promise<void> {
     // Voice announcement on priority channel
     // This will automatically duck all other channels to 10% volume
     await queueAudio('./voice/game-over.mp3', 2);
     // When this audio finishes, other channels will return to their original volume
   }
 
-  async pauseGame() {
+  async pauseGame(): Promise<void> {
     await pauseAllChannels();
     console.log('⏸️ Game paused');
   }
 
-  async resumeGame() {
+  async resumeGame(): Promise<void> {
     await resumeAllChannels();
     console.log('▶️ Game resumed');
   }
@@ -246,9 +246,9 @@ const gameAudio = new GameAudio();
 await gameAudio.startGame();
 
 // Simulate some game events
-setTimeout(() => gameAudio.playerJump(), 1000);
-setTimeout(() => gameAudio.playerExplode(), 2000);
-setTimeout(() => gameAudio.gameOver(), 3000);
+setTimeout(async () => await gameAudio.playerJump(), 1000);
+setTimeout(async () => await gameAudio.playerExplode(), 2000);
+setTimeout(async () => await gameAudio.gameOver(), 3000);
 ```
 
 ## 🎯 What's Next?
@@ -264,7 +264,7 @@ Complete documentation of all available functions
 ### 🎯 **[Examples](../getting-started/basic-usage)**
 Real-world examples for gaming and interactive apps
 
-### 🔥 **[Advanced Features](../advanced/volume-ducking)**
+### 🔥 **[Advanced Features](../api-reference/volume-ducking)**
 Volume ducking, priority queuing, and progress tracking
 
 ## 💡 Quick Tips

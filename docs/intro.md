@@ -62,7 +62,7 @@ Complete function reference with examples
 ### 🎯 **[Examples](./getting-started/basic-usage)**
 Real-world use cases for games and interactive apps
 
-### 🔥 **[Advanced Features](./advanced/volume-ducking)**
+### 🔥 **[Advanced Features](./api-reference/volume-ducking)**
 Volume ducking, priority queuing, and progress tracking
 
 ### 🔄 **[Migration & Help](./migration/troubleshooting)**

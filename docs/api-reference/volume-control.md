@@ -1,6 +1,6 @@
 # Volume Control
 
-Control audio levels across individual channels or all channels simultaneously. For automated volume control, check out the [Volume Ducking](../advanced/volume-ducking.md) documentation.
+Control audio levels across individual channels or all channels simultaneously. For automated volume control, check out the [Volume Ducking](./volume-ducking.md) documentation.
 
 ## setChannelVolume
 
@@ -342,11 +342,11 @@ async function changeScene(): Promise<void> {
 
 ## Next Steps
 
-For advanced volume control techniques, check out the [Volume Ducking](../advanced/volume-ducking.md) system.
+For advanced volume control techniques, check out the [Volume Ducking](./volume-ducking.md) system.
 
 Now that you understand the volume system, explore:
 
-- **[Advanced Queue Manipulation](../advanced/advanced-queue-manipulation.md)** - Precise queue control and monitoring
+- **[Advanced Queue Manipulation](./advanced-queue-manipulation.md)** - Precise queue control and monitoring
 - **[Audio Information](./audio-information.md)** - Get real-time audio data
 - **[Queue Management](./queue-management.md)** - Control audio queues
 - **[Event Listeners](./event-listeners.md)** - Setting up Event Listeners

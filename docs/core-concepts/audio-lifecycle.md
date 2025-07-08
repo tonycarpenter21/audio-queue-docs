@@ -24,7 +24,7 @@ async function demonstrateLifecycle(): Promise<void> {
   onAudioStart(0, (info) => {
     console.log(`2. Audio started: ${info.fileName}`);
     console.log(`   Duration: ${info.duration}ms`);
-    console.log(`   Volume: ${info.volume}`);
+    console.log(`   Channel: ${info.channelNumber}`);
   });
   
   // 3. Progress updates during playback
@@ -50,7 +50,7 @@ async function demonstrateLifecycle(): Promise<void> {
 Audio enters the system when queued on a channel:
 
 ```typescript
-import { queueAudio, queueAudioPriority, getQueueSnapshot } from 'audio-channel-queue';
+import { queueAudio, queueAudioPriority, getQueueSnapshot, stopCurrentAudioInChannel } from 'audio-channel-queue';
 
 class AudioLifecycleTracker {
   async trackQueuePhase(): Promise<void> {
@@ -66,14 +66,14 @@ class AudioLifecycleTracker {
     // Priority queueing - interrupts current playback
     await queueAudioPriority('./audio/urgent.mp3'); // Places sound file in first queue spot behind currently playing sound
     console.log('✓ urgent.mp3 queued with priority');
-    await stopCurrentSound(); // This is what interrupts current playback
+    await stopCurrentAudioInChannel(); // This is what interrupts current playback
     
     // Check queue state after queueing
     const snapshot = getQueueSnapshot(); // Using default channel 0
     console.log(`Queue now has ${snapshot.totalItems} items`);
     snapshot.items.forEach((item, index) => {
       const status = item.isCurrentlyPlaying ? 'Playing' : 'Queued';
-      console.log(`  ${item.position}. ${status}: ${item.fileName}`);
+      console.log(`  ${index + 1}. ${status}: ${item.fileName}`);
     });
   }
 }
@@ -84,7 +84,7 @@ class AudioLifecycleTracker {
 Before playback begins, the audio element is prepared:
 
 ```typescript
-import { onAudioStart } from 'audio-channel-queue';
+import { onAudioStart, AudioStartInfo } from 'audio-channel-queue';
 
 class LoadingPhaseTracker {
   setupLoadingTracking(): void {
@@ -183,7 +183,7 @@ class PlaybackPhaseTracker {
 Audio lifecycle ends either naturally or through interruption:
 
 ```typescript
-import { onAudioComplete, stopCurrentAudioInChannel } from 'audio-channel-queue';
+import { onAudioComplete, stopCurrentAudioInChannel, AudioCompleteInfo } from 'audio-channel-queue';
 
 class CompletionPhaseTracker {
   setupCompletionTracking(): void {
@@ -251,6 +251,24 @@ class CompletionPhaseTracker {
 Here's a comprehensive state machine that tracks the entire audio lifecycle:
 
 ```typescript
+import {
+  onQueueChange,
+  onAudioStart,
+  onAudioComplete,
+  onAudioProgress,
+  onAudioError,
+  offQueueChange,
+  offAudioStart,
+  offAudioComplete,
+  offAudioProgress,
+  offAudioError,
+  pauseWithFade,
+  resumeWithFade,
+  stopCurrentAudioInChannel,
+  queueAudio,
+  FadeType
+} from 'audio-channel-queue';
+
 enum AudioLifecycleState {
   IDLE = 'idle',
   QUEUED = 'queued',
@@ -475,21 +493,21 @@ class AudioLifecycleStateMachine {
   }
   
   // Public interface to control audio state
-  public pauseAudio(fadeType: FadeType = FadeType.Gentle): void {
+  public async pauseAudio(fadeType: FadeType = FadeType.Gentle): Promise<void> {
     if (this.state === AudioLifecycleState.PLAYING) {
-      pauseWithFade(fadeType, this.channel);
+      await pauseWithFade(fadeType, this.channel);
       // State transition will happen via onQueueChange event
     }
   }
   
-  public resumeAudio(fadeType: FadeType = FadeType.Gentle): void {
+  public async resumeAudio(fadeType: FadeType = FadeType.Gentle): Promise<void> {
     if (this.state === AudioLifecycleState.PAUSED) {
-      resumeWithFade(fadeType, this.channel);
+      await resumeWithFade(fadeType, this.channel);
       // State transition will happen via onQueueChange event
     }
   }
   
-  public stopAudio(): void {
+  public async stopAudio(): Promise<void> {
     if (this.isActive()) {
       this.manualInterrupt = true; // Flag that this is a manual interruption
       await stopCurrentAudioInChannel(this.channel);
@@ -497,7 +515,7 @@ class AudioLifecycleStateMachine {
     }
   }
   
-  public skipToNext(): void {
+  public async skipToNext(): Promise<void> {
     if (this.isActive()) {
       this.manualInterrupt = true; // Flag that this is a manual interruption
       await stopCurrentAudioInChannel(this.channel);
@@ -505,7 +523,7 @@ class AudioLifecycleStateMachine {
     }
   }
   
-  public retry(): boolean {
+  public async retry(): Promise<boolean> {
     if (this.state === AudioLifecycleState.ERROR && this.currentAudio) {
       // Try to queue the same audio again
       await queueAudio(this.currentAudio, this.channel, { addToFront: true });
@@ -537,6 +555,19 @@ class AudioLifecycleStateMachine {
 Track audio lifecycle for performance monitoring and analytics:
 
 ```typescript
+import {
+  onQueueChange,
+  onAudioStart,
+  onAudioComplete,
+  onAudioPause,
+  onAudioResume,
+  onAudioError,
+  extractFileName,
+  AudioStartInfo,
+  AudioCompleteInfo,
+  AudioInfo
+} from 'audio-channel-queue';
+
 class AudioLifecycleAnalytics {
   private lifecycleEvents: Array<{
     timestamp: number;
@@ -634,7 +665,7 @@ class AudioLifecycleAnalytics {
     });
     
     // Track audio pause events
-    onAudioPause(this.channel, (info) => {
+    onAudioPause(this.channel, (channelNumber, info) => {
       const fileName = info.fileName || 'unknown';
       const trackData = this.trackingMap.get(fileName);
       
@@ -646,7 +677,7 @@ class AudioLifecycleAnalytics {
     });
     
     // Track audio resume events
-    onAudioResume(this.channel, (info) => {
+    onAudioResume(this.channel, (channelNumber, info) => {
       const fileName = info.fileName || 'unknown';
       const trackData = this.trackingMap.get(fileName);
       
@@ -719,4 +750,4 @@ Now that you understand the complete audio lifecycle, explore:
 - **[Performance & Memory](./performance-memory.md)** - Optimization strategies for the entire lifecycle
 - **[API Reference](../api-reference/queue-management)** - Detailed function documentation
 - **[Examples](../getting-started/basic-usage)** - Real-world lifecycle management patterns
-- **[Advanced Features](../advanced/volume-ducking)** - Complex lifecycle scenarios 
+- **[Advanced Features](../api-reference/volume-ducking)** - Complex lifecycle scenarios

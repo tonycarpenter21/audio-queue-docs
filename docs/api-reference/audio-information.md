@@ -419,7 +419,7 @@ class PlaylistViewer {
 
 ## 🔗 Related Functions
 
-- **[Advanced Queue Manipulation](../advanced/advanced-queue-manipulation)** - Remove, reorder, and swap queue items
+- **[Advanced Queue Manipulation](./advanced-queue-manipulation)** - Remove, reorder, and swap queue items
 - **[Queue Management](./queue-management)** - Basic queue operations
 - **[Event Listeners](./event-listeners)** - Monitor audio and queue events
 - **[Types & Interfaces](./types-interfaces)** - TypeScript interface definitions 

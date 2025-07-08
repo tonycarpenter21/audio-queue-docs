@@ -32,12 +32,12 @@ await queueAudio('sounds/background-music.mp3', 0);
 await queueAudio('sounds/sound-effect.mp3', 1);
 
 // Control playback
-pauseChannel(0);     // Pause background music
-resumeChannel(0);    // Resume background music
+await pauseChannel(0);     // Pause background music
+await resumeChannel(0);    // Resume background music
 
 // Adjust volumes
-setChannelVolume(0, 0.5);  // 50% volume for channel 0
-setChannelVolume(1, 0.8);  // 80% volume for channel 1
+await setChannelVolume(0, 0.5);  // 50% volume for channel 0
+await setChannelVolume(1, 0.8);  // 80% volume for channel 1
 ```
 
 ## 📋 Common Use Cases
@@ -64,7 +64,7 @@ await queueAudio('notifications/alert.mp3', 0);
 // Background ambiance
 await queueAudio('ambient/office-sounds.mp3', 1, { 
   loop: true,
-  gain: 0.3 
+  volume: 0.3 
 });
 ```
 
@@ -74,12 +74,12 @@ await queueAudio('ambient/office-sounds.mp3', 1, {
 await queueAudio('audio/main-content.mp3', 0);
 
 // Pause with smooth fade
-await setChannelVolume(0, 0, 1000, 'ease-out');
-pauseChannel(0);
+await transitionVolume(0, 0, 1000);
+await pauseChannel(0);
 
 // Resume with fade-in
-resumeChannel(0);
-await setChannelVolume(0, 1, 1000, 'ease-in');
+await resumeChannel(0);
+await transitionVolume(0, 1, 1000);
 ```
 
 ## 🎯 Try the Live Examples
@@ -98,7 +98,7 @@ The live demo includes all the code examples above plus advanced features like:
 
 - **[API Reference](../api-reference/queue-management)** - Complete function documentation
 - **[Core Concepts](../core-concepts/audio-channels)** - Understanding channels and queues
-- **[Advanced Features](../advanced/volume-ducking)** - Power user techniques
+- **[Advanced Features](../api-reference/volume-ducking)** - Power user techniques
 
 ## 💡 Need Help?
 

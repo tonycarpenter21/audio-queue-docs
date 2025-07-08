@@ -72,7 +72,7 @@ await queueAudio('./new-playlist/song1.mp3');
 await stopAllAudio();
 
 // Common: panic button
-document.getElementById('emergency-stop').onclick = () => {
+document.getElementById('emergency-stop').onclick = async () => {
   await stopAllAudio();
 };
 ```
@@ -82,15 +82,15 @@ document.getElementById('emergency-stop').onclick = () => {
 ### [setChannelVolume()](./volume-control#setchannelvolume)
 ```typescript
 // Set volume (0-1 range)
-setChannelVolume(0, 0.5);  // Channel 0 at 50%
-setChannelVolume(1, 0.8);  // Channel 1 at 80%
+await setChannelVolume(0, 0.5);  // Channel 0 at 50%
+await setChannelVolume(1, 0.8);  // Channel 1 at 80%
 
 // Mute/unmute pattern
-setChannelVolume(0, 0);    // Mute
-setChannelVolume(0, 0.7);  // Restore
+await setChannelVolume(0, 0);    // Mute
+await setChannelVolume(0, 0.7);  // Restore
 
-// With smooth transitions (new!)
-await setChannelVolume(0, 0.3, 500, 'ease-out');  // Fade over 500ms
+// With smooth transitions
+await setChannelVolume(0, 0.3, 500, EasingType.EaseOut);  // Fade over 500ms
 ```
 
 ### [getChannelVolume()](./volume-control#getchannelvolume)
@@ -113,12 +113,12 @@ volumes.forEach((vol, ch) => console.log(`Ch${ch}: ${vol * 100}%`));
 ### [setAllChannelsVolume()](./volume-control#setallchannelsvolume)
 ```typescript
 // Master volume control
-setAllChannelsVolume(0.5);  // All channels 50%
-setAllChannelsVolume(0);    // Mute all
+await setAllChannelsVolume(0.5);  // All channels 50%
+await setAllChannelsVolume(0);    // Mute all
 
 // Fade out pattern
 for (let v = 1.0; v >= 0; v -= 0.1) {
-  setAllChannelsVolume(v);
+  await setAllChannelsVolume(v);
   await new Promise(r => setTimeout(r, 100));
 }
 ```
@@ -148,12 +148,12 @@ clearVolumeDucking();
 ```typescript
 // Smooth volume transitions
 await fadeVolume(0, 0, 1000);         // Fade out over 1s
-await fadeVolume(0, 1, 500, 'ease-out'); // Fade in over 500ms
+await fadeVolume(0, 1, 500, EasingType.EaseOut); // Fade in over 500ms
 
 // Cross-fade between channels
 await Promise.all([
-  fadeVolume(0, 0, 800, 'ease-in'),
-  fadeVolume(1, 1, 800, 'ease-out')
+  fadeVolume(0, 0, 800, EasingType.EaseIn),
+  fadeVolume(1, 1, 800, EasingType.EaseOut)
 ]);
 ```
 
@@ -168,7 +168,7 @@ await pauseChannel();
 await pauseChannel(1);
 
 // Common: pause on focus loss
-window.addEventListener('blur', () => pauseChannel());
+window.addEventListener('blur', async () => await pauseChannel());
 ```
 
 ### [resumeChannel()](./pause-resume#resumechannel)
@@ -180,7 +180,7 @@ await resumeChannel();
 await resumeChannel(1);
 
 // Common: resume on focus
-window.addEventListener('focus', () => resumeChannel());
+window.addEventListener('focus', async () => await resumeChannel());
 ```
 
 ### [togglePauseChannel()](./pause-resume#togglepausechannel)
@@ -189,9 +189,9 @@ window.addEventListener('focus', () => resumeChannel());
 await togglePauseChannel();
 
 // Space bar pause pattern
-document.addEventListener('keydown', (e) => {
+document.addEventListener('keydown', async (e) => {
   if (e.code === 'Space') {
-    togglePauseChannel();
+    await togglePauseChannel();
   }
 });
 ```
@@ -262,7 +262,7 @@ Object.entries(allInfo).forEach(([channel, info]) => {
 
 ## 🔄 Advanced Queue Manipulation
 
-### [removeQueuedItem()](../advanced/advanced-queue-manipulation#remove-queued-item)
+### [removeQueuedItem()](./advanced-queue-manipulation#remove-queued-item)
 ```typescript
 // Remove by position (can't remove currently playing at index 0)
 const result = removeQueuedItem(2);  // Remove 3rd item
@@ -272,7 +272,7 @@ if (!result.success) console.error(result.error);
 removeQueuedItem(1, 1);  // Remove 2nd item from channel 1
 ```
 
-### [reorderQueue()](../advanced/advanced-queue-manipulation#reorder-queue-items)
+### [reorderQueue()](./advanced-queue-manipulation#reorder-queue-items)
 ```typescript
 // Move item from position 3 to position 1
 const result = reorderQueue(3, 1);
@@ -283,7 +283,7 @@ function moveTrackUp(index: number) {
 }
 ```
 
-### [swapQueueItems()](../advanced/advanced-queue-manipulation#swap-queue-items)
+### [swapQueueItems()](./advanced-queue-manipulation#swap-queue-items)
 ```typescript
 // Swap positions (can't swap with playing item at 0)
 swapQueueItems(1, 3);  // Swap 2nd and 4th items
@@ -298,7 +298,7 @@ function shuffleQueue() {
 }
 ```
 
-### [clearQueueAfterCurrent()](../advanced/advanced-queue-manipulation#clear-queue-after-current)
+### [clearQueueAfterCurrent()](./advanced-queue-manipulation#clear-queue-after-current)
 ```typescript
 // Keep only current, clear rest
 clearQueueAfterCurrent();
@@ -309,7 +309,7 @@ await queueAudio('./new-track1.mp3');
 await queueAudio('./new-track2.mp3');
 ```
 
-### [getQueueItemInfo()](../advanced/advanced-queue-manipulation#get-queue-item-info) / [getQueueLength()](../advanced/advanced-queue-manipulation#get-queue-length)
+### [getQueueItemInfo()](./advanced-queue-manipulation#get-queue-item-info) / [getQueueLength()](./advanced-queue-manipulation#get-queue-length)
 ```typescript
 // Get specific item info
 const item = getQueueItemInfo(1);  // 2nd item
@@ -340,8 +340,9 @@ onAudioComplete(0, async (info) => {
   }
 });
 
-// Note: onAudioStart and onAudioComplete don't have off functions
-// Listeners persist until channel is destroyed
+// Clean up event listeners when needed
+offAudioStart(0);    // Remove all start listeners for channel 0
+offAudioComplete(0); // Remove all complete listeners for channel 0
 ```
 
 ### [onAudioProgress()](./event-listeners#onaudioprogress)
@@ -396,10 +397,10 @@ for (const track of tracks) {
 }
 
 // Skip button
-skipButton.onclick = () => stopCurrentAudioInChannel();
+skipButton.onclick = async () => await stopCurrentAudioInChannel();
 
 // Previous button (simple approach)
-prevButton.onclick = () => {
+prevButton.onclick = async () => {
   stopAllAudioInChannel();
   // Re-queue from previous track
   for (let i = currentTrackIndex - 1; i < tracks.length; i++) {
@@ -423,7 +424,6 @@ async function playNotification(type: string) {
   // Remove ducking after notification
   onAudioComplete(1, () => {
     clearVolumeDucking();
-    // Note: onAudioComplete listeners can't be removed individually
   });
 }
 ```

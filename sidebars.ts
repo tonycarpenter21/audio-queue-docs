@@ -42,9 +42,9 @@ const sidebars: SidebarsConfig = {
       items: [
         'api-reference/quick-reference',
         'api-reference/queue-management',
-        'advanced/advanced-queue-manipulation',
+        'api-reference/advanced-queue-manipulation',
         'api-reference/volume-control',
-        'advanced/volume-ducking',
+        'api-reference/volume-ducking',
         'api-reference/pause-resume',
         'api-reference/event-listeners',
         'api-reference/audio-information',

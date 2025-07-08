@@ -678,7 +678,7 @@ class ConditionalPauseManager {
 
 Now that you understand the Pause & Resume system, explore:
 
-- **[Advanced Queue Manipulation](../advanced/advanced-queue-manipulation.md)** - Precise queue control and monitoring
+- **[Advanced Queue Manipulation](./advanced-queue-manipulation.md)** - Precise queue control and monitoring
 - **[Audio Information](./audio-information.md)** - Get real-time audio data
 - **[Queue Management](./queue-management.md)** - Control audio queues
 - **[Volume Control](./volume-control.md)** - Manage audio levels

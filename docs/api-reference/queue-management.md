@@ -421,7 +421,7 @@ await audioManager.playAnnouncement('checkpoint');
 
 ## 🔗 Related Functions
 
-- **[Advanced Queue Manipulation](../advanced/advanced-queue-manipulation)** - Advanced queue editing, reordering, and item management
+- **[Advanced Queue Manipulation](./advanced-queue-manipulation)** - Advanced queue editing, reordering, and item management
 - **[Volume Control](./volume-control)** - Control playback volume
 - **[Pause/Resume](./pause-resume)** - Pause and resume playback
 - **[Event Listeners](./event-listeners)** - Monitor queue changes

@@ -1043,6 +1043,5 @@ offQueueChange(0); // Remove all queue change listeners for channel 0
 Now that you understand the event system, explore:
 
 - **[Audio Lifecycle](./audio-lifecycle.md)** - Complete audio playback flow with events
-- **[Performance & Memory](./performance-memory.md)** - Optimization strategies for events
 - **[API Reference](../api-reference/event-listeners.md)** - Detailed event documentation
 - **[Examples](../getting-started/basic-usage)** - Real-world event handling patterns

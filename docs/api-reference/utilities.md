@@ -149,7 +149,7 @@ getAudioInfoFromElement(
 
 - `audio` (HTMLAudioElement): The audio element to extract info from
 - `channelNumber` (number, optional): Channel number for queue context
-- `audioChannels` (ExtendedAudioQueueChannel[], optional): Channels array for remainingInQueue calculation
+- `audioChannels` (ExtendedAudioQueueChannel[], optional): Channels array for context
 
 ### Returns
 
@@ -161,8 +161,9 @@ getAudioInfoFromElement(
 import { getAudioInfoFromElement } from 'audio-channel-queue';
 
 const audioElement = new Audio('song.mp3');
-const info = getAudioInfoFromElement(audioElement);
+await audioElement.load(); // Ensure metadata is loaded
 
+const info = getAudioInfoFromElement(audioElement);
 if (info) {
   console.log(`Progress: ${info.progress * 100}%`);
   console.log(`Duration: ${info.duration}ms`);
@@ -209,6 +210,7 @@ if (snapshot) {
 2. **Sanitize filenames** before displaying in UI with `sanitizeForDisplay()`
 3. **Use `cleanWebpackFilename()`** for cleaner UI display of bundled assets
 4. **Prefer higher-level APIs** like `getCurrentAudioInfo()` over `getAudioInfoFromElement()`
+5. **Load audio metadata** before calling `getAudioInfoFromElement()` for accurate information
 
 ## Next Steps
 

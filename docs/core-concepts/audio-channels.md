@@ -353,4 +353,3 @@ Now that you understand audio channels, explore:
 - **[Queue System](./queue-system.md)** - How queuing works within channels
 - **[Event System](./event-system.md)** - Managing events across channels  
 - **[Audio Lifecycle](./audio-lifecycle.md)** - Complete audio playback flow
-- **[Performance & Memory](./performance-memory.md)** - Optimization strategies 

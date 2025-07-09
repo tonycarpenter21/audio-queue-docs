@@ -47,14 +47,14 @@ await queueAudio('./music/outro.mp3');        // Plays after main-theme
 With `queueAudioPriority()`, files interrupt current playback and jump to the front:
 
 ```typescript
-import { queueAudio, queueAudioPriority } from 'audio-channel-queue';
+import { queueAudio, queueAudioPriority, stopCurrentAudioInChannel } from 'audio-channel-queue';
 
 // Start with background music (using default channel 0)
 await queueAudio('./music/background.mp3');
 
 // Urgent announcement interrupts immediately
 await queueAudioPriority('./voice/emergency-alert.mp3'); // This queues the next sound after the currently playing sound
-await stopCurrentAudioInChannel() // This stops the currently playing sound
+await stopCurrentAudioInChannel(); // This stops the currently playing sound
 ```
 
 ## Queue States and Information
@@ -64,10 +64,15 @@ await stopCurrentAudioInChannel() // This stops the currently playing sound
 Get complete information about a channel's queue:
 
 ```typescript
-import { getQueueSnapshot, QueueSnapshot, QueueItem } from 'audio-channel-queue';
+import { getQueueSnapshot, QueueSnapshot } from 'audio-channel-queue';
 
 function analyzeQueue(channel: number): void {
-  const snapshot: QueueSnapshot = channel === 0 ? getQueueSnapshot() : getQueueSnapshot(channel);
+  const snapshot: QueueSnapshot | null = channel === 0 ? getQueueSnapshot() : getQueueSnapshot(channel);
+  
+  if (!snapshot) {
+    console.log(`No queue found for channel ${channel}`);
+    return;
+  }
   
   console.log(`Channel ${channel} Queue Analysis:`);
   console.log(`- Total items: ${snapshot.totalItems}`);
@@ -76,10 +81,10 @@ function analyzeQueue(channel: number): void {
   
   if (snapshot.items.length > 0) {
     console.log('\nQueue Items:');
-    snapshot.items.forEach((item: QueueItem, index: number) => {
+    snapshot.items.forEach((item, index: number) => {
       const status = item.isCurrentlyPlaying ? '🔊 Playing' : '⏳ Queued';
       const duration = Math.round(item.duration / 1000);
-      console.log(`  ${item.position}. ${status} - ${item.fileName} (${duration}s)`);
+      console.log(`  ${index + 1}. ${status} - ${item.fileName} (${duration}s)`);
     });
   }
 }
@@ -125,6 +130,8 @@ class QueueMonitor {
 ### Playlist Management
 
 ```typescript
+import { queueAudio, stopCurrentAudioInChannel, queueAudioPriority, onAudioComplete } from 'audio-channel-queue';
+
 class PlaylistManager {
   private playlist: string[] = [];
   private currentIndex: number = 0;
@@ -190,6 +197,8 @@ await musicPlayer.startPlaylist();
 ### Dynamic Content Insertion
 
 ```typescript
+import { queueAudio, queueAudioPriority, pauseChannel, resumeChannel, onAudioComplete } from 'audio-channel-queue';
+
 class DynamicContentManager {
   private baseChannel: number = 0;
   private adChannel: number = 1;
@@ -200,7 +209,7 @@ class DynamicContentManager {
   
   async insertAd(adUrl: string, returnToContent: boolean = true): Promise<void> {
     // Pause main content
-    pauseChannel(this.baseChannel);
+    await pauseChannel(this.baseChannel);
     
     // Play ad on separate channel
     await queueAudioPriority(adUrl, this.adChannel);
@@ -220,6 +229,8 @@ class DynamicContentManager {
 ### Gaming Audio Queues
 
 ```typescript
+import { queueAudio, queueAudioPriority, stopCurrentAudioInChannel } from 'audio-channel-queue';
+
 class GameAudioQueue {
   private musicChannel: number = 0;
   private sfxChannel: number = 1;
@@ -238,7 +249,7 @@ class GameAudioQueue {
     
     // Character dialog (interrupts other voice)
     await queueAudioPriority('./voice/victory-shout.mp3', this.voiceChannel);
-    await stopCurrentAudioInChannel(this.voiceChannel)
+    await stopCurrentAudioInChannel(this.voiceChannel);
   }
   
   async handleEmergency(): Promise<void> {
@@ -256,5 +267,4 @@ Now that you understand the queue system, explore:
 
 - **[Event System](./event-system.md)** - React to queue and playback events
 - **[Audio Lifecycle](./audio-lifecycle.md)** - Complete audio playback flow  
-- **[Performance & Memory](./performance-memory.md)** - Optimization strategies
 - **[API Reference](../api-reference/queue-management.md)** - Detailed function documentation 

@@ -21,7 +21,7 @@ const sidebars: SidebarsConfig = {
         'getting-started/installation',
         'getting-started/quick-start',
         'getting-started/basic-usage',
-        'getting-started/react-integration',
+        // 'getting-started/react-integration', // TODO: Publish later
         'getting-started/browser-compatibility',
       ],
       label: 'Getting Started',
@@ -33,7 +33,6 @@ const sidebars: SidebarsConfig = {
         'core-concepts/queue-system',
         'core-concepts/event-system',
         'core-concepts/audio-lifecycle',
-        'core-concepts/performance-memory',
       ],
       label: 'Core Concepts',
       type: 'category'

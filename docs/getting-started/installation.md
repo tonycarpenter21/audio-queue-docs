@@ -69,7 +69,7 @@ await queueAudio('./sounds/welcome.mp3');
 <script src="node_modules/audio-channel-queue/dist/index.umd.js"></script>
 <script>
   // Available as global AudioChannelQueue
-  AudioChannelQueue.queueAudio('./sounds/welcome.mp3');
+  await AudioChannelQueue.queueAudio('./sounds/welcome.mp3');
 </script>
 ```
 
@@ -205,7 +205,7 @@ onAudioStart(0, (info) => {
 });
 
 // Test with a simple audio file
-export async function testAudio() {
+export async function testAudio(): Promise<void> {
   try {
     await queueAudio('./audio/test-sound.mp3');
     console.log('✅ Audio Channel Queue is working!');
@@ -215,7 +215,7 @@ export async function testAudio() {
 }
 
 // Call the test
-testAudio();
+await testAudio();
 ```
 
 ## 🐛 Troubleshooting Installation

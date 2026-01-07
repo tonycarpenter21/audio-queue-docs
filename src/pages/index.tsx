@@ -21,17 +21,28 @@ function HomepageHeader(): React.JSX.Element {
           <Link
             className="button button--secondary button--lg"
             to="/getting-started/installation">
-            Get Started 🚀
+            Get Started
           </Link>
           <Link
             className="button button--outline button--secondary button--lg"
             style={{ marginLeft: '1rem' }}
             to="https://tonycarpenter21.github.io/audio-queue-demo">
-            View Live Demo 🎵
+            View Live Demo
           </Link>
         </div>
         <div className={styles['quick-install']}>
           <code>npm install audio-channel-queue</code>
+        </div>
+        <div className={styles['npm-shields']}>
+          <a href="https://www.npmjs.com/package/audio-channel-queue" target="_blank" rel="noopener noreferrer">
+            <img src="https://img.shields.io/npm/v/audio-channel-queue?style=flat-square&logo=npm&label=version" alt="NPM Version" />
+          </a>
+          <a href="https://github.com/tonycarpenter21/audio-channel-queue" target="_blank" rel="noopener noreferrer">
+            <img src="https://img.shields.io/github/stars/tonycarpenter21/audio-channel-queue?style=flat-square&logo=github" alt="GitHub Stars" />
+          </a>
+          <a href="https://github.com/tonycarpenter21/audio-channel-queue/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">
+            <img src="https://img.shields.io/npm/l/audio-channel-queue?style=flat-square" alt="License" />
+          </a>
         </div>
       </div>
     </header>

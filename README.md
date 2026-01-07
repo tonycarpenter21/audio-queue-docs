@@ -1,12 +1,10 @@
 # Audio Channel Queue Documentation
 
-This website is built using [Docusaurus](https://docusaurus.io/), a modern static website generator.
+## Quick Links
 
-## 🔗 Quick Links
-
-- **📚 Live Documentation**: [Docs](https://tonycarpenter21.github.io/audio-queue-docs/)
-- **🎵 Live Demo**: [Demo](https://tonycarpenter21.github.io/audio-queue-demo/queue-management)
-- **📦 NPM Package**: [NPM Package](https://www.npmjs.com/package/audio-channel-queue)
+- **Live Documentation**: [Docs](https://tonycarpenter21.github.io/audio-queue-docs/)
+- **Live Demo**: [Demo](https://tonycarpenter21.github.io/audio-queue-demo/queue-management)
+- **NPM Package**: [NPM Package](https://www.npmjs.com/package/audio-channel-queue)
 
 ## Installation
 

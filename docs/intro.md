@@ -4,29 +4,43 @@ title: Welcome to Audio Channel Queue
 description: Multi-channel audio queue management for browsers with TypeScript support
 ---
 
-# 🎵 Audio Channel Queue Documentation
+# Audio Channel Queue Documentation
+
+<div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
+  <a href="https://www.npmjs.com/package/audio-channel-queue" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.shields.io/npm/v/audio-channel-queue?style=flat-square&logo=npm&label=version" alt="NPM Version" />
+  </a>
+  <a href="https://github.com/tonycarpenter21/audio-channel-queue" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.shields.io/github/stars/tonycarpenter21/audio-channel-queue?style=flat-square&logo=github" alt="GitHub Stars" />
+  </a>
+  <a href="https://github.com/tonycarpenter21/audio-channel-queue/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.shields.io/npm/l/audio-channel-queue?style=flat-square" alt="License" />
+  </a>
+</div>
 
 Welcome to **Audio Channel Queue** - the most comprehensive solution for managing audio playback in browser applications!
 
-## 🌟 What is Audio Channel Queue?
+## What is Audio Channel Queue?
 
 Audio Channel Queue is a powerful TypeScript library that enables you to manage multiple independent audio queues simultaneously. Perfect for games, interactive applications, and any project requiring sophisticated audio control.
 
-### ✨ Key Features
+### Key Features
 
-- 🎛️ **Multi-channel Management** - Independent audio queues for concurrent playback
-- ⏯️ **Pause/Resume Control** - Full playback control for individual channels or all channels  
-- 🔊 **Volume Control & Ducking** - Dynamic volume management with automatic background reduction
-- 🔄 **Loop Support** - Seamless audio looping for background music and ambient sounds
-- 🚨 **Priority Queueing** - Add urgent audio to the front of any queue
-- ✂️ **Advanced Queue Manipulation** - Remove, reorder, and swap queue items with precision
-- 📊 **Real-time Progress Tracking** - Comprehensive playback monitoring and metadata
-- 🎯 **Event-driven Architecture** - Extensive callback system for UI integration
-- 📘 **Full TypeScript Support** - Complete type definitions and IntelliSense
-- 🚫 **Zero Dependencies** - Lightweight and self-contained
-- 📜 **MIT Licensed** - Free for commercial and personal use
+- **Multi-channel Management** - Independent audio queues for concurrent playback
+- **Pause/Resume Control** - Full playback control for individual channels or all channels  
+- **Volume Control & Ducking** - Dynamic volume management with automatic background reduction
+- **Global Volume Control** - Global volume slider with preserved channel ratios
+- **Loop Support** - Seamless audio looping for background music and ambient sounds
+- **Priority Queueing** - Add urgent audio to the front of any queue
+- **Advanced Queue Manipulation** - Remove, reorder, and swap queue items with precision
+- **Real-time Progress Tracking** - Comprehensive playback monitoring and metadata
+- **Event-driven Architecture** - Extensive callback system for UI integration
+- **Full TypeScript Support** - Complete type definitions and IntelliSense
+- **Zero Dependencies** - Lightweight and self-contained
+- **iOS Compatible** - Full Web Audio API support with fallback mechanisms
+- **MIT Licensed** - Free for commercial and personal use
 
-## 🚀 Quick Start
+## Quick Start
 
 Get up and running in 2 minutes:
 
@@ -101,7 +115,7 @@ await queueAudioPriority('./alerts/incoming-message.wav', 2);
 await queueAudio('./ambient/office-noise.mp3', 0, { loop: true });
 ```
 
-## 🌐 Browser Support
+## Browser Support
 
 - ✅ **Chrome 51+** (June 2016)
 - ✅ **Firefox 54+** (June 2017)  
@@ -109,21 +123,20 @@ await queueAudio('./ambient/office-noise.mp3', 0, { loop: true });
 - ✅ **Edge 15+** (April 2017)
 - ✅ **Mobile browsers** with HTML5 audio support
 
-## 🔗 Helpful Links
+## Helpful Links
 
-- 📦 **[NPM Package](https://www.npmjs.com/package/audio-channel-queue)** - Install from npm
-- 🎮 **[Live Demo](https://tonycarpenter21.github.io/audio-queue-demo)** - See it in action
-- 📖 **[GitHub Repository](https://github.com/tonycarpenter21/audio-channel-queue)** - Source code
-- 🐛 **[Report Issues](https://github.com/tonycarpenter21/audio-channel-queue/issues)** - Bug reports and feature requests
+- **[NPM Package](https://www.npmjs.com/package/audio-channel-queue)** - Install from npm
+- **[Live Demo](https://tonycarpenter21.github.io/audio-queue-demo)** - See it in action
+- **[GitHub Repository](https://github.com/tonycarpenter21/audio-channel-queue)** - Source code
+- **[Report Issues](https://github.com/tonycarpenter21/audio-channel-queue/issues)** - Bug reports and feature requests
 
-## 🤝 Community & Support
+## Community & Support
 
 Need help? Have questions? 
 
-- 💬 **[GitHub Discussions](https://github.com/tonycarpenter21/audio-channel-queue/discussions)** - Ask questions and share ideas
-- 🐛 **[GitHub Issues](https://github.com/tonycarpenter21/audio-channel-queue/issues)** - Report bugs or request features
-- 📧 **Contact** - Reach out for enterprise support
+- **[GitHub Discussions](https://github.com/tonycarpenter21/audio-channel-queue/discussions)** - Ask questions and share ideas
+- **[GitHub Issues](https://github.com/tonycarpenter21/audio-channel-queue/issues)** - Report bugs or request features
 
 ---
 
-Ready to build amazing audio experiences? Let's **[get started](./getting-started/installation)**! 🚀
+Ready to build amazing audio experiences? Let's **[get started](./getting-started/installation)**! 

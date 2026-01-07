@@ -200,8 +200,8 @@ togglePauseAllChannels(): Promise<void>
 ```typescript
 import { togglePauseAllChannels } from 'audio-channel-queue';
 
-// Master play/pause control
-async function masterToggle(): Promise<void> {
+// Play/pause control
+async function playbackToggle(): Promise<void> {
   await togglePauseAllChannels();
 }
 

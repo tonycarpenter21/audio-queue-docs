@@ -4,7 +4,7 @@ title: Queue Management
 description: Functions for managing audio queues - queueAudio, queueAudioPriority, and stop functions
 ---
 
-# 🎵 Queue Management Functions
+# Queue Management Functions
 
 This section covers all functions related to managing audio queues - adding audio, priority queuing, and stopping playback.
 
@@ -24,8 +24,7 @@ queueAudio(audioFile: string, channelNumber?: number = 0, options?: AudioQueueOp
 interface AudioQueueOptions {
   addToFront?: boolean;   // Whether to add this audio to the front of the queue (after currently playing)
   loop?: boolean;         // Whether the audio should loop when it finishes
-  maxQueueSize?: number;  // Maximum number of items allowed in the queue (defaults to unlimited) 
-  priority?: boolean;     // @deprecated Use addToFront instead. Legacy support for priority queuing */
+  maxQueueSize?: number;  // Maximum number of items allowed in the queue (defaults to unlimited)
   volume?: number;        // Volume level for this specific audio (0-1)
 }
 ```
@@ -193,7 +192,7 @@ stopAllAudioInChannel();
 ```typescript
 function createEmergencyStopButton() {
   const button = document.createElement('button');
-  button.textContent = '🛑 Emergency Stop';
+  button.textContent = 'Emergency Stop';
   button.onclick = () => {
     stopAllAudioInChannel(); // Clear background music (channel 0)
     stopAllAudioInChannel(1); // Clear sound effects
@@ -419,7 +418,7 @@ await audioManager.playEffect('jump');
 await audioManager.playAnnouncement('checkpoint');
 ```
 
-## 🔗 Related Functions
+## Related Functions
 
 - **[Advanced Queue Manipulation](./advanced-queue-manipulation)** - Advanced queue editing, reordering, and item management
 - **[Volume Control](./volume-control)** - Control playback volume
@@ -429,4 +428,4 @@ await audioManager.playAnnouncement('checkpoint');
 
 ---
 
-**Next:** Learn about **[Volume Control](./volume-control)** functions → 
+**Next:** Learn about **[Volume Control](./volume-control)** functions

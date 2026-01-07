@@ -34,3 +34,10 @@
   font-weight: 600;
   padding: 0.8rem 1.5rem;
 }
+
+.npm-shields {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin: 20px;
+}

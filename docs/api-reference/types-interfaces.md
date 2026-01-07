@@ -42,7 +42,6 @@ interface AudioQueueOptions {
   addToFront?: boolean;  // Whether to add this audio to the front of the queue (after currently playing)
   loop?: boolean;        // Whether the audio should loop when it finishes
   maxQueueSize?: number; // Maximum number of items allowed in the queue (defaults to unlimited)
-  priority?: boolean;    // Deprecated - use addToFront
   volume?: number;       // Volume level for this specific audio (0-1)
 }
 ```

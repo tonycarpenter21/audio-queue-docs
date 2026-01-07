@@ -8,7 +8,7 @@ description: Quick reference guide with concise examples for all audio-channel-q
 
 Quick examples for all `audio-channel-queue` functions. For detailed documentation, click the function names.
 
-## 🎵 Basic Queue Operations
+## Basic Queue Operations
 
 ### [queueAudio()](./queue-management#queueaudio)
 ```typescript
@@ -77,7 +77,7 @@ document.getElementById('emergency-stop').onclick = async () => {
 };
 ```
 
-## 🔊 Volume Control
+## Volume Control
 
 ### [setChannelVolume()](./volume-control#setchannelvolume)
 ```typescript
@@ -110,9 +110,36 @@ const volumes = getAllChannelsVolume();
 volumes.forEach((vol, ch) => console.log(`Ch${ch}: ${vol * 100}%`));
 ```
 
+### [setGlobalVolume()](./volume-control#setglobalvolume)
+```typescript
+// Set global volume multiplier (preserves channel ratios)
+await setGlobalVolume(0.5); // 50% global volume
+
+// Example: Volume control
+await setChannelVolume(0, 0.3); // SFX at 30%
+await setChannelVolume(1, 0.7); // Music at 70%
+await setGlobalVolume(0.5);     // Global 50% (SFX now 15%, Music now 35%)
+
+// Quick global mute without losing channel settings
+await setGlobalVolume(0);   // Mute all
+await setGlobalVolume(1.0); // Restore all ratios
+```
+
+### [getGlobalVolume()](./volume-control#getglobalvolume)
+```typescript
+// Get current global volume multiplier
+const globalVol = getGlobalVolume();
+console.log(`Global volume: ${(globalVol * 100).toFixed(0)}%`);
+
+// Check if globally muted
+if (getGlobalVolume() === 0) {
+  console.log('All audio globally muted');
+}
+```
+
 ### [setAllChannelsVolume()](./volume-control#setallchannelsvolume)
 ```typescript
-// Master volume control
+// Set all channels volume control
 await setAllChannelsVolume(0.5);  // All channels 50%
 await setAllChannelsVolume(0);    // Mute all
 
@@ -144,20 +171,20 @@ setVolumeDucking({
 clearVolumeDucking();
 ```
 
-### [fadeVolume()](./volume-control#fadevolume)
+### [transitionVolume()](./volume-control#transitionvolume)
 ```typescript
 // Smooth volume transitions
-await fadeVolume(0, 0, 1000);         // Fade out over 1s
-await fadeVolume(0, 1, 500, EasingType.EaseOut); // Fade in over 500ms
+await transitionVolume(0, 0, 1000);         // Fade out over 1s
+await transitionVolume(0, 1, 500, EasingType.EaseOut); // Fade in over 500ms
 
 // Cross-fade between channels
 await Promise.all([
-  fadeVolume(0, 0, 800, EasingType.EaseIn),
-  fadeVolume(1, 1, 800, EasingType.EaseOut)
+  transitionVolume(0, 0, 800, EasingType.EaseIn),
+  transitionVolume(1, 1, 800, EasingType.EaseOut)
 ]);
 ```
 
-## ⏯️ Pause & Resume
+## Pause & Resume
 
 ### [pauseChannel()](./pause-resume#pausechannel)
 ```typescript
@@ -214,7 +241,7 @@ document.addEventListener('visibilitychange', async () => {
 });
 ```
 
-## 📊 Audio Information
+## Audio Information
 
 ### [getCurrentAudioInfo()](./audio-information#getcurrentaudioinfo)
 ```typescript
@@ -260,7 +287,7 @@ Object.entries(allInfo).forEach(([channel, info]) => {
 });
 ```
 
-## 🔄 Advanced Queue Manipulation
+## Advanced Queue Manipulation
 
 ### [removeQueuedItem()](./advanced-queue-manipulation#remove-queued-item)
 ```typescript
@@ -322,7 +349,7 @@ const length = getQueueLength();  // Channel 0 (default)
 console.log(`${length} tracks queued`);
 ```
 
-## 🎧 Event Listeners
+## Event Listeners
 
 ### [onAudioStart()](./event-listeners#onaudiostart) / [onAudioComplete()](./event-listeners#onaudiocomplete)
 ```typescript
@@ -371,7 +398,7 @@ onQueueChange(0, (snapshot) => {
 offQueueChange(0);
 ```
 
-## 💡 Common Patterns
+## Common Patterns
 
 ### Multi-Channel Game Audio
 ```typescript
@@ -427,7 +454,4 @@ async function playNotification(type: string) {
   });
 }
 ```
-
----
-
-📚 For detailed documentation and advanced examples, visit the specific function pages linked above. 
+ 

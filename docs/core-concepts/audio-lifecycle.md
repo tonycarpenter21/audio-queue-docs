@@ -54,7 +54,7 @@ import { queueAudio, queueAudioPriority, getQueueSnapshot, stopCurrentAudioInCha
 
 class AudioLifecycleTracker {
   async trackQueuePhase(): Promise<void> {
-    console.log('📋 Phase 1: Queuing');
+    console.log('Phase 1: Queuing');
     
     // Standard queueing - added to end of queue (using default channel 0)
     await queueAudio('./audio/track1.mp3');
@@ -88,7 +88,7 @@ import { onAudioStart, AudioStartInfo } from 'audio-channel-queue';
 
 class LoadingPhaseTracker {
   setupLoadingTracking(): void {
-    console.log('📂 Phase 2: Loading & Preparation');
+    console.log('Phase 2: Loading & Preparation');
     
     onAudioStart(0, (info) => {
       console.log(`✓ Audio loaded and ready: ${info.fileName}`);
@@ -121,7 +121,7 @@ class PlaybackPhaseTracker {
   private milestones: Set<number> = new Set();
   
   setupPlaybackTracking(): void {
-    console.log('▶️ Phase 3: Active Playback');
+    console.log('Phase 3: Active Playback');
     
     onAudioProgress(0, (info) => {
       this.trackPlaybackProgress(info);
@@ -136,8 +136,8 @@ class PlaybackPhaseTracker {
     
     // Log progress periodically (every 10%)
     if (percentage % 10 === 0 && !this.milestones.has(percentage)) {
-      console.log(`⏸️ Progress: ${percentage}% - ${info.fileName}`);
-      console.log(`   Time: ${info.currentTime}ms / ${info.duration}ms`);
+      console.log(`Progress: ${percentage}% - ${info.fileName}`);
+      console.log(`Time: ${info.currentTime}ms / ${info.duration}ms`);
       this.milestones.add(percentage);
     }
   }
@@ -156,17 +156,17 @@ class PlaybackPhaseTracker {
   }
   
   private onEarlyPlayback(info: AudioInfo): void {
-    console.log(`🎵 Early playback (10%): ${info.fileName}`);
+    console.log(`Early playback (10%): ${info.fileName}`);
     // Good time to start preloading next track
   }
   
   private onMidpoint(info: AudioInfo): void {
-    console.log(`🎯 Midpoint reached (50%): ${info.fileName}`);
+    console.log(`Midpoint reached (50%): ${info.fileName}`);
     // Analytics milestone, UI updates
   }
   
   private onNearingEnd(info: AudioInfo): void {
-    console.log(`🏁 Nearing end (90%): ${info.fileName}`);
+    console.log(`Nearing end (90%): ${info.fileName}`);
     // Prepare for transition to next track
   }
   
@@ -187,7 +187,7 @@ import { onAudioComplete, stopCurrentAudioInChannel, AudioCompleteInfo } from 'a
 
 class CompletionPhaseTracker {
   setupCompletionTracking(): void {
-    console.log('🏁 Phase 4: Completion or Interruption');
+    console.log('Phase 4: Completion or Interruption');
     
     onAudioComplete(0, (info) => {
       this.analyzeCompletion(info);
@@ -197,17 +197,17 @@ class CompletionPhaseTracker {
   
   private analyzeCompletion(info: AudioCompleteInfo): void {
     console.log(`Completion analysis for: ${info.fileName}`);
-    console.log(`  Channel: ${info.channelNumber}`);
-    console.log(`  Source: ${info.src}`);
-    console.log(`  Remaining in queue: ${info.remainingInQueue}`);
+    console.log(`Channel: ${info.channelNumber}`);
+    console.log(`Source: ${info.src}`);
+    console.log(`Remaining in queue: ${info.remainingInQueue}`);
     
     // Process completion
     this.handleCompletion(info);
   }
   
   private handleCompletion(info: AudioCompleteInfo): void {
-    console.log(`✅ Completed: ${info.fileName}`);
-    console.log(`   Channel: ${info.channelNumber}`);
+    console.log(`Completed: ${info.fileName}`);
+    console.log(`Channel: ${info.channelNumber}`);
     
     // Update completion stats
     this.trackSuccessfulCompletion(info);
@@ -235,12 +235,12 @@ class CompletionPhaseTracker {
   }
   
   private onQueueEmpty(): void {
-    console.log('🔕 Queue is now empty - session ended');
+    console.log('Queue is now empty - session ended');
     // Handle end of playback session
   }
   
   private onMoreItemsInQueue(remaining: number): void {
-    console.log(`▶️ Queue continues with ${remaining} items`);
+    console.log(`Queue continues with ${remaining} items`);
     // Next item will automatically start playing
   }
 }
@@ -366,7 +366,7 @@ class AudioLifecycleStateMachine {
     const oldState = this.state;
     this.state = newState;
     
-    console.log(`🔄 Lifecycle: ${oldState} → ${newState}`);
+    console.log(`Lifecycle: ${oldState} → ${newState}`);
     
     // Handle state-specific logic
     this.handleStateEntry(newState, oldState);
@@ -377,42 +377,42 @@ class AudioLifecycleStateMachine {
     
     switch (state) {
       case AudioLifecycleState.IDLE:
-        console.log('💤 Audio system is idle');
+        console.log('Audio system is idle');
         this.onIdle();
         break;
         
       case AudioLifecycleState.QUEUED:
-        console.log(`📋 Audio queued: ${this.currentAudio || 'Unknown'}`);
+        console.log(`Audio queued: ${this.currentAudio || 'Unknown'}`);
         this.onQueued();
         break;
         
       case AudioLifecycleState.PLAYING:
-        console.log(`▶️ Audio playing: ${this.currentAudio}`);
+        console.log(`Audio playing: ${this.currentAudio}`);
         this.onPlaying();
         break;
         
       case AudioLifecycleState.PAUSED:
-        console.log(`⏸️ Audio paused: ${this.currentAudio} (${elapsed}ms elapsed so far)`);
+        console.log(`Audio paused: ${this.currentAudio} (${elapsed}ms elapsed so far)`);
         this.onPaused();
         break;
         
       case AudioLifecycleState.COMPLETING:
-        console.log(`🏁 Audio completing: ${this.currentAudio} (${elapsed}ms elapsed)`);
+        console.log(`Audio completing: ${this.currentAudio} (${elapsed}ms elapsed)`);
         this.onCompleting();
         break;
         
       case AudioLifecycleState.COMPLETED:
-        console.log(`✅ Audio completed: ${this.currentAudio} (${elapsed}ms total)`);
+        console.log(`Audio completed: ${this.currentAudio} (${elapsed}ms total)`);
         this.onCompleted();
         break;
         
       case AudioLifecycleState.INTERRUPTED:
-        console.log(`⏹️ Audio interrupted: ${this.currentAudio} (${elapsed}ms elapsed)`);
+        console.log(`Audio interrupted: ${this.currentAudio} (${elapsed}ms elapsed)`);
         this.onInterrupted();
         break;
         
       case AudioLifecycleState.ERROR:
-        console.log(`❌ Audio error: ${this.currentAudio} (${this.errorMessage})`);
+        console.log(`Audio error: ${this.currentAudio} (${this.errorMessage})`);
         this.onError();
         break;
     }

@@ -75,7 +75,7 @@ Removes all audio start event listeners for a specific channel.
 ### Syntax
 
 ```typescript
-offAudioStart(channelNumber: number): void
+offAudioStart(channelNumber?: number = 0): void
 ```
 
 ### Examples
@@ -219,7 +219,7 @@ Removes all audio complete event listeners for a specific channel.
 ### Syntax
 
 ```typescript
-offAudioComplete(channelNumber: number): void
+offAudioComplete(channelNumber?: number = 0): void
 ```
 
 ### Examples
@@ -360,7 +360,7 @@ Removes all audio pause event listeners for a specific channel.
 ### Syntax
 
 ```typescript
-offAudioPause(channelNumber: number): void
+offAudioPause(channelNumber?: number = 0): void
 ```
 
 ### Examples
@@ -481,7 +481,7 @@ Removes all audio resume event listeners for a specific channel.
 ### Syntax
 
 ```typescript
-offAudioResume(channelNumber: number): void
+offAudioResume(channelNumber?: number = 0): void
 ```
 
 ### Examples
@@ -682,7 +682,7 @@ Removes all queue change event listeners for a specific channel.
 ### Syntax
 
 ```typescript
-offQueueChange(channelNumber: number): void
+offQueueChange(channelNumber?: number = 0): void
 ```
 
 ### Examples

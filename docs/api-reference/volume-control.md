@@ -171,45 +171,108 @@ volumes.forEach((volume, index) => {
 const hasMutedChannel = getAllChannelsVolume().some(vol => vol === 0);
 ```
 
-## fadeVolume
+## setGlobalVolume
 
-Smoothly transitions volume for a specific channel over time.
+Sets a global volume multiplier that affects all channels while preserving their relative volume levels.
 
 ### Syntax
 
 ```typescript
-fadeVolume(
-  channelNumber: number,
-  targetVolume: number,
-  duration?: number,
-  easing?: EasingType
-): Promise<void>
+setGlobalVolume(volume: number): Promise<void>
 ```
 
 ### Parameters
 
-- `channelNumber` (number): The channel number to fade
-- `targetVolume` (number): Target volume level (0-1)
-- `duration` (number, optional): Fade duration in milliseconds (defaults to 250)
-- `easing` (EasingType, optional): Easing function type (defaults to 'ease-out')
+- `volume` (number): Global volume multiplier between 0.0 (muted) and 1.0 (full volume)
+
+### How Global Volume Works
+
+The global volume acts as a **multiplier** - it scales all channel volumes proportionally while preserving their individual settings. This is perfect for implementing an app volume slider in your UI.
 
 ### Examples
 
 ```typescript
-import { fadeVolume } from 'audio-channel-queue';
+import { setGlobalVolume, setChannelVolume } from 'audio-channel-queue';
 
-// Fade out over 1 second
-await fadeVolume(0, 0, 1000, EasingType.EaseIn);
+// Set up different audio types with individual volumes
+await setChannelVolume(0, 0.3); // SFX channel at 30%
+await setChannelVolume(1, 0.7); // Music channel at 70%
+await setChannelVolume(2, 0.5); // Voice channel at 50%
 
-// Fade in over 500ms
-await fadeVolume(0, 1, 500, EasingType.EaseOut);
+// User adjusts global volume slider to 50%
+await setGlobalVolume(0.5);
 
-// Cross-fade between channels
-async function crossFade(fromChannel: number, toChannel: number): Promise<void> {
-  await Promise.all([
-    fadeVolume(fromChannel, 0, 800, EasingType.EaseIn),
-    fadeVolume(toChannel, 1, 800, EasingType.EaseOut)
-  ]);
+// Actual playback volumes become:
+// - SFX: 30% × 50% = 15%
+// - Music: 70% × 50% = 35%
+// - Voice: 50% × 50% = 25%
+
+// Channel volumes remain at their original settings (0.3, 0.7, 0.5)
+// So when global volume is increased, ratios are preserved
+await setGlobalVolume(1.0); // Back to full volume
+// - SFX: 30% × 100% = 30%
+// - Music: 70% × 100% = 70%
+// - Voice: 50% × 100% = 50%
+
+// Quick mute all audio without losing individual settings
+await setGlobalVolume(0); // Mute everything
+await setGlobalVolume(1.0); // Restore with all ratios intact
+```
+
+### Difference from setAllChannelsVolume
+
+```typescript
+// setAllChannelsVolume() sets all channels to the SAME volume
+await setChannelVolume(0, 0.3);
+await setChannelVolume(1, 0.7);
+await setAllChannelsVolume(0.5); // Both channels now at 0.5
+
+// setGlobalVolume() MULTIPLIES all channels by the same amount
+await setChannelVolume(0, 0.3);
+await setChannelVolume(1, 0.7);
+await setGlobalVolume(0.5); // Channel 0 at 0.15, Channel 1 at 0.35
+```
+
+## getGlobalVolume
+
+Gets the current global volume multiplier.
+
+### Syntax
+
+```typescript
+getGlobalVolume(): number
+```
+
+### Returns
+
+- `number`: Current global volume multiplier (0.0 to 1.0)
+
+### Examples
+
+```typescript
+import { getGlobalVolume, setGlobalVolume } from 'audio-channel-queue';
+
+// Get current global volume
+const globalVol = getGlobalVolume(); // Returns current global volume (0-1)
+console.log(`Global volume: ${(globalVol * 100).toFixed(0)}%`);
+
+// Check if globally muted
+if (getGlobalVolume() === 0) {
+  console.log('All audio is globally muted');
+}
+
+// Save and restore global volume
+const savedVolume = getGlobalVolume();
+await setGlobalVolume(0); // Temporarily mute
+// ... do something ...
+await setGlobalVolume(savedVolume); // Restore
+
+// Display in UI
+function updateVolumeDisplay(): void {
+  const volume = getGlobalVolume();
+  const percentage = Math.round(volume * 100);
+  document.getElementById('volume-display')!.textContent = `${percentage}%`;
+  document.getElementById('volume-slider')!.value = volume.toString();
 }
 ```
 
@@ -246,8 +309,6 @@ await transitionVolume(0, 0.2, 300, EasingType.EaseIn);
 // Quick fade to 80% 
 await transitionVolume(1, 0.8, 100, EasingType.Linear);
 ```
-
-> **Note**: `fadeVolume()` is the preferred alias for this function.
 
 ## getFadeConfig
 
@@ -302,10 +363,10 @@ cancelVolumeTransition(channelNumber: number): void
 ### Examples
 
 ```typescript
-import { fadeVolume, cancelVolumeTransition } from 'audio-channel-queue';
+import { transitionVolume, cancelVolumeTransition } from 'audio-channel-queue';
 
 // Start a long fade
-fadeVolume(0, 0, 5000); // 5 second fade out
+transitionVolume(0, 0, 5000); // 5 second fade out
 
 // Cancel it after 1 second
 setTimeout(() => {

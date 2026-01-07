@@ -4,11 +4,11 @@ title: Quick Start
 description: Get up and running with audio-channel-queue in 5 minutes
 ---
 
-# 🚀 Quick Start Guide
+# Quick Start Guide
 
 Get up and running with Audio Channel Queue in just **5 minutes**! This guide will walk you through creating your first multi-channel audio application.
 
-## 📋 What We'll Build
+## What We'll Build
 
 By the end of this guide, you'll have:
 - ✅ Background music playing on channel 0
@@ -17,7 +17,7 @@ By the end of this guide, you'll have:
 - ✅ Pause/resume functionality
 - ✅ Event listeners showing real-time feedback
 
-## 🎵 Step 1: Basic Audio Playback
+## Step 1: Basic Audio Playback
 
 Let's start with the simplest possible example:
 
@@ -32,7 +32,7 @@ console.log('Audio is now playing!');
 
 That's it! Your first audio is playing. But let's make it more interesting...
 
-## 🎛️ Step 2: Multiple Channels
+## Step 2: Multiple Channels
 
 Now let's use multiple channels to play different types of audio simultaneously:
 
@@ -53,7 +53,7 @@ await queueAudio('./sfx/button-click.wav', 1, {
 console.log('Background music and sound effects playing!');
 ```
 
-## ⏯️ Step 3: Add Pause/Resume Controls
+## Step 3: Add Pause/Resume Controls
 
 Let's add some control over our audio:
 
@@ -84,7 +84,7 @@ setTimeout(async () => {
 // await pauseAllChannels();
 ```
 
-## 🔊 Step 4: Volume Control
+## Step 4: Volume Control
 
 Control the volume of individual channels or all channels at once:
 
@@ -103,7 +103,7 @@ console.log(`Background volume: ${bgVolume * 100}%`);
 await setAllChannelsVolume(0.5);  // All channels: 50%
 ```
 
-## 📊 Step 5: Real-time Event Monitoring
+## Step 5: Real-time Event Monitoring
 
 Get real-time feedback about what's happening:
 
@@ -118,32 +118,32 @@ import {
 
 // Listen for when audio starts playing
 onAudioStart(0, (info) => {
-  console.log(`🎵 Started: ${info.fileName}`);
-  console.log(`⏱️  Duration: ${(info.duration / 1000).toFixed(1)}s`);
+  console.log(`Started: ${info.fileName}`);
+  console.log(`Duration: ${(info.duration / 1000).toFixed(1)}s`);
 });
 
 // Listen for when audio finishes
 onAudioComplete(0, (info) => {
-  console.log(`✅ Completed: ${info.fileName}`);
-  console.log(`📊 Remaining in queue: ${info.remainingInQueue}`);
+  console.log(`Completed: ${info.fileName}`);
+  console.log(`Remaining in queue: ${info.remainingInQueue}`);
 });
 
 // Listen for real-time progress updates
 onAudioProgress(0, (info) => {
   const progressPercent = (info.progress * 100).toFixed(1);
-  console.log(`📈 Progress: ${progressPercent}%`);
+  console.log(`Progress: ${progressPercent}%`);
 });
 
 // Listen for queue changes
 onQueueChange(0, (snapshot) => {
-  console.log(`📋 Queue has ${snapshot.totalItems} items`);
+  console.log(`Queue has ${snapshot.totalItems} items`);
 });
 
 // Now start some audio to see the events in action
 await queueAudio('./music/song.mp3', 0);
 ```
 
-## 🚨 Step 6: Priority Audio & Queue Management
+## Step 6: Priority Audio & Queue Management
 
 Handle urgent audio that needs to play immediately:
 
@@ -170,7 +170,7 @@ await stopCurrentAudioInChannel(0);
 // await stopAllAudioInChannel(0);
 ```
 
-## 🎮 Complete Example: Simple Game Audio
+## Complete Example: Simple Game Audio
 
 Here's a complete example showing how you might use Audio Channel Queue in a simple game:
 
@@ -201,14 +201,14 @@ class GameAudio {
 
     // Log when important audio starts
     onAudioStart(2, (info) => {
-      console.log(`🎙️ Voice announcement: ${info.fileName}`);
+      console.log(`Voice announcement: ${info.fileName}`);
     });
   }
 
   async startGame(): Promise<void> {
     // Start background music
     await queueAudio('./music/game-theme.mp3', 0, { loop: true });
-    console.log('🎮 Game started!');
+    console.log('Game started!');
   }
 
   async playerJump(): Promise<void> {
@@ -230,12 +230,12 @@ class GameAudio {
 
   async pauseGame(): Promise<void> {
     await pauseAllChannels();
-    console.log('⏸️ Game paused');
+    console.log('Game paused');
   }
 
   async resumeGame(): Promise<void> {
     await resumeAllChannels();
-    console.log('▶️ Game resumed');
+    console.log('Game resumed');
   }
 }
 
@@ -251,38 +251,38 @@ setTimeout(async () => await gameAudio.playerExplode(), 2000);
 setTimeout(async () => await gameAudio.gameOver(), 3000);
 ```
 
-## 🎯 What's Next?
+## What's Next?
 
 Congratulations! You now have a solid foundation with Audio Channel Queue. Here's what to explore next:
 
-### 📚 **[Core Concepts](../core-concepts/audio-channels)**
+### **[Core Concepts](../core-concepts/audio-channels)**
 Understand how channels, queues, and the audio lifecycle work
 
-### 📖 **[API Reference](../api-reference/queue-management)**  
+### **[API Reference](../api-reference/queue-management)**  
 Complete documentation of all available functions
 
-### 🎯 **[Examples](../getting-started/basic-usage)**
+### **[Examples](../getting-started/basic-usage)**
 Real-world examples for gaming and interactive apps
 
-### 🔥 **[Advanced Features](../api-reference/volume-ducking)**
+### **[Advanced Features](../api-reference/volume-ducking)**
 Volume ducking, priority queuing, and progress tracking
 
-## 💡 Quick Tips
+## Quick Tips
 
-**🎵 Audio File Tips:**
+**Audio File Tips:**
 - Use MP3 for music and voice (good compression)
 - Use WAV for short sound effects (no compression delay)
 - Keep file sizes reasonable for web loading
 
-**🎛️ Channel Organization:**
+**Channel Organization:**
 - Channel 0: Background music/ambient
 - Channel 1: Sound effects/UI sounds  
 - Channel 2: Voice/announcements
 - Add more channels as needed
 
-**⚡ Performance Tips:**
+**Performance Tips:**
 - Preload important audio files
 - Use volume ducking instead of stopping/starting
 - Monitor memory usage with many audio files
 
-Ready to build something amazing? Check out our **[real-world examples](../getting-started/basic-usage)** for inspiration! 🚀 
+Ready to build something amazing? Check out our **[real-world examples](../getting-started/basic-usage)** for inspiration!

@@ -4,7 +4,7 @@ title: Installation
 description: How to install and set up audio-channel-queue in your project
 ---
 
-# 📦 Installation
+# Installation
 
 ## Install with npm
 
@@ -24,7 +24,7 @@ yarn add audio-channel-queue
 pnpm add audio-channel-queue
 ```
 
-## 📋 Requirements
+## Requirements
 
 ### Environment Requirements
 - **Browser environment** (not Node.js server-side)
@@ -34,7 +34,7 @@ pnpm add audio-channel-queue
 - **Node.js 14+** (for building and testing only)
 - **TypeScript 4.5+** (optional, but recommended)
 
-## 🚀 Basic Setup
+## Basic Setup
 
 ### ES6 Modules (Recommended)
 
@@ -73,7 +73,7 @@ await queueAudio('./sounds/welcome.mp3');
 </script>
 ```
 
-## ⚙️ TypeScript Configuration
+## TypeScript Configuration
 
 ### Add Type Declarations for Audio Files
 
@@ -124,7 +124,7 @@ Update your `tsconfig.json` to include type declarations:
 }
 ```
 
-## 🎵 Audio File Preparation
+## Audio File Preparation
 
 ### Supported Formats
 
@@ -145,7 +145,7 @@ Audio Channel Queue supports all formats that the browser's `HTMLAudioElement` s
 | **Voice/Speech** | MP3 | Good compression for speech |
 | **Game Audio** | WAV or OGG | Low latency, good quality |
 
-## 🔧 Build Tool Configuration
+## Build Tool Configuration
 
 ### Webpack
 
@@ -191,7 +191,7 @@ import { queueAudio } from 'audio-channel-queue';
 await queueAudio(welcomeSound);
 ```
 
-## ✅ Verify Installation
+## Verify Installation
 
 Create a simple test to verify everything is working:
 
@@ -208,9 +208,9 @@ onAudioStart(0, (info) => {
 export async function testAudio(): Promise<void> {
   try {
     await queueAudio('./audio/test-sound.mp3');
-    console.log('✅ Audio Channel Queue is working!');
+    console.log('Audio Channel Queue is working!');
   } catch (error) {
-    console.error('❌ Error playing audio:', error);
+    console.error('Error playing audio:', error);
   }
 }
 
@@ -218,7 +218,7 @@ export async function testAudio(): Promise<void> {
 await testAudio();
 ```
 
-## 🐛 Troubleshooting Installation
+## Troubleshooting Installation
 
 ### Common Issues
 
@@ -254,8 +254,8 @@ If you're still having issues:
    - Error messages
    - Minimal reproduction example
 
-## 🎯 Next Steps
+## Next Steps
 
 Now that you have audio-channel-queue installed, let's create your first audio queue:
 
-➡️ **[Quick Start Guide](./quick-start)** - Build your first audio application in 5 minutes 
+**[Quick Start Guide](./quick-start)** - Build your first audio application in 5 minutes 

@@ -1,12 +1,12 @@
 ---
 title: Basic Usage Examples
-description: Practical examples showing how to use audio-channel-queue in real applications
+description: Practical examples showing how to use AudioQ in real applications
 sidebar_position: 1
 ---
 
 # Basic Usage Examples
 
-Welcome to the practical examples section! Here you'll find real-world implementations showing how to use `audio-channel-queue` in your applications.
+Welcome to the practical examples section! Here you'll find real-world implementations showing how to use AudioQ in your applications.
 
 ## Interactive Demo
 
@@ -25,7 +25,7 @@ This demo includes:
 Here's a minimal example to get you started:
 
 ```typescript
-import { queueAudio, pauseChannel, resumeChannel, setChannelVolume } from 'audio-channel-queue';
+import { queueAudio, pauseChannel, resumeChannel, setChannelVolume } from 'audioq';
 
 // Queue some audio files
 await queueAudio('sounds/background-music.mp3', 0);
@@ -105,4 +105,4 @@ The live demo includes all the code examples above plus advanced features like:
 Having trouble? Check out our:
 - **[Troubleshooting Guide](../migration/troubleshooting)**
 - **[Browser Compatibility](../getting-started/browser-compatibility)**
-- **[GitHub Issues](https://github.com/tonycarpenter21/audio-channel-queue/issues)** 
+- **[GitHub Issues](https://github.com/tonycarpenter21/audioq/issues)** 

@@ -1,12 +1,12 @@
 ---
 sidebar_position: 0
 title: Quick Reference
-description: Quick reference guide with concise examples for all audio-channel-queue functions
+description: Quick reference guide with concise examples for all audioq functions
 ---
 
 # Quick Reference
 
-Quick examples for all `audio-channel-queue` functions. For detailed documentation, click the function names.
+Quick examples for all `audioq` functions. For detailed documentation, click the function names.
 
 ## Basic Queue Operations
 

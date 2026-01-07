@@ -4,7 +4,7 @@ Understanding the comprehensive event system that powers real-time audio monitor
 
 ## What is the Event System?
 
-The audio-channel-queue package provides a rich event system that allows you to react to audio playback changes, queue modifications, and progress updates in real-time. Events are channel-specific and fire automatically during audio operations.
+The AudioQ package provides a rich event system that allows you to react to audio playback changes, queue modifications, and progress updates in real-time. Events are channel-specific and fire automatically during audio operations.
 
 ```typescript
 import { 
@@ -16,7 +16,7 @@ import {
   offAudioComplete,
   offAudioProgress,
   offQueueChange
-} from 'audio-channel-queue';
+} from 'audioq';
 
 // React to audio starting
 const cleanupStart = onAudioStart(0, (info) => {
@@ -47,7 +47,7 @@ const cleanupQueue = onQueueChange(0, (snapshot) => {
 Fired when audio begins playing on a channel:
 
 ```typescript
-import { onAudioStart, AudioStartInfo } from 'audio-channel-queue';
+import { onAudioStart, AudioStartInfo } from 'audioq';
 
 onAudioStart(0, (info: AudioStartInfo) => {
   console.log('Audio started:', {
@@ -82,7 +82,7 @@ function setProgressBarMax(duration: number): void {
 Fired when audio finishes playing (naturally or interrupted):
 
 ```typescript
-import { onAudioComplete, AudioCompleteInfo } from 'audio-channel-queue';
+import { onAudioComplete, AudioCompleteInfo } from 'audioq';
 
 onAudioComplete(0, (info: AudioCompleteInfo) => {
   console.log('Audio completed:', {
@@ -99,7 +99,7 @@ onAudioComplete(0, (info: AudioCompleteInfo) => {
 Fired continuously during audio playback for real-time progress tracking:
 
 ```typescript
-import { onAudioProgress, AudioInfo } from 'audio-channel-queue';
+import { onAudioProgress, AudioInfo } from 'audioq';
 
 onAudioProgress(0, (info: AudioInfo) => {
   const percentage = Math.round(info.progress * 100);
@@ -158,7 +158,7 @@ function onThreeQuarterProgress(fileName: string): void {
 Fired when the queue is modified (items added, removed, or reordered):
 
 ```typescript
-import { onQueueChange, QueueSnapshot } from 'audio-channel-queue';
+import { onQueueChange, QueueSnapshot } from 'audioq';
 
 onQueueChange(0, (snapshot: QueueSnapshot) => {
   console.log('Queue changed:', {
@@ -989,7 +989,7 @@ All event listeners can be removed using corresponding "off" methods. This is im
 ### Removing Audio Start Listeners
 
 ```typescript
-import { onAudioStart, offAudioStart } from 'audio-channel-queue';
+import { onAudioStart, offAudioStart } from 'audioq';
 
 // Add listener
 const cleanup = onAudioStart(0, (info) => {
@@ -1002,7 +1002,7 @@ offAudioStart(0); // Remove all start listeners for channel 0
 ### Removing Audio Complete Listeners
 
 ```typescript
-import { onAudioComplete, offAudioComplete } from 'audio-channel-queue';
+import { onAudioComplete, offAudioComplete } from 'audioq';
 
 // Add listener
 const cleanup = onAudioComplete(0, (info) => {
@@ -1015,7 +1015,7 @@ offAudioComplete(0); // Remove all complete listeners for channel 0
 ### Removing Audio Progress Listeners
 
 ```typescript
-import { onAudioProgress, offAudioProgress } from 'audio-channel-queue';
+import { onAudioProgress, offAudioProgress } from 'audioq';
 
 // Add listener
 const cleanup = onAudioProgress(0, (info) => {
@@ -1028,7 +1028,7 @@ offAudioProgress(0); // Remove all progress listeners for channel 0
 ### Removing Queue Change Listeners
 
 ```typescript
-import { onQueueChange, offQueueChange } from 'audio-channel-queue';
+import { onQueueChange, offQueueChange } from 'audioq';
 
 // Add listener
 const cleanup = onQueueChange(0, (snapshot) => {

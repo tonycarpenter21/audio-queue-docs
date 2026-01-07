@@ -1,12 +1,12 @@
 ---
 title: Troubleshooting
-description: Common issues and solutions for audio-channel-queue
+description: Common issues and solutions for AudioQ
 sidebar_position: 1
 ---
 
 # Troubleshooting
 
-Common issues and solutions when using audio-channel-queue.
+Common issues and solutions when using AudioQ.
 
 ## Audio Not Playing
 
@@ -58,6 +58,6 @@ Some mobile browsers have additional restrictions on background audio.
 
 ## Need More Help?
 
-- **[GitHub Issues](https://github.com/tonycarpenter21/audio-channel-queue/issues)** - Report bugs
+- **[GitHub Issues](https://github.com/tonycarpenter21/audioq/issues)** - Report bugs
 - **[Live Demo](https://tonycarpenter21.github.io/audio-queue-demo/)** - Test functionality
 - **[Browser Compatibility](../getting-started/browser-compatibility)** - Supported browsers 

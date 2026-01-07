@@ -1,6 +1,6 @@
 # Types & Interfaces
 
-Complete TypeScript definitions for all types and interfaces used in the audio-channel-queue package.
+Complete TypeScript definitions for all types and interfaces used in the AudioQ package.
 
 ## Constants
 

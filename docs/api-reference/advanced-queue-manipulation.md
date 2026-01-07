@@ -45,7 +45,7 @@ removeQueuedItem(queuedSlotNumber: number, channelNumber: number = 0): QueueMani
 ### Examples
 
 ```typescript
-import { removeQueuedItem, queueAudio } from 'audio-channel-queue';
+import { removeQueuedItem, queueAudio } from 'audioq';
 
 // Setup a queue first
 await queueAudio('/audio/track1.mp3'); // Index 0 (playing)
@@ -86,7 +86,7 @@ reorderQueue(currentQueuedSlotNumber: number, newQueuedSlotNumber: number, chann
 ### Examples
 
 ```typescript
-import { reorderQueue, queueAudio, getQueueSnapshot } from 'audio-channel-queue';
+import { reorderQueue, queueAudio, getQueueSnapshot } from 'audioq';
 
 // Setup a queue
 await queueAudio('/audio/intro.mp3');    // Index 0 (playing)
@@ -130,7 +130,7 @@ clearQueueAfterCurrent(channelNumber: number = 0): QueueManipulationResult
 ### Examples
 
 ```typescript
-import { clearQueueAfterCurrent, queueAudio } from 'audio-channel-queue';
+import { clearQueueAfterCurrent, queueAudio } from 'audioq';
 
 // Setup a queue with multiple items
 await queueAudio('/audio/current.mp3');   // Index 0 (playing)
@@ -172,7 +172,7 @@ swapQueueItems(slotA: number, slotB: number, channelNumber: number = 0): QueueMa
 ### Examples
 
 ```typescript
-import { swapQueueItems, queueAudio } from 'audio-channel-queue';
+import { swapQueueItems, queueAudio } from 'audioq';
 
 // Setup a queue
 await queueAudio('/audio/playing.mp3');  // Index 0 (playing)
@@ -233,7 +233,7 @@ interface QueueItem {
 ### Examples
 
 ```typescript
-import { getQueueItemInfo, queueAudio } from 'audio-channel-queue';
+import { getQueueItemInfo, queueAudio } from 'audioq';
 
 // Setup a queue
 await queueAudio('/audio/track1.mp3'); // Index 0
@@ -280,7 +280,7 @@ getQueueLength(channelNumber: number = 0): number
 ### Examples
 
 ```typescript
-import { getQueueLength, queueAudio } from 'audio-channel-queue';
+import { getQueueLength, queueAudio } from 'audioq';
 
 // Setup a queue
 await queueAudio('/audio/track1.mp3');

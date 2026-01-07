@@ -1,28 +1,28 @@
 ---
 sidebar_position: 1
-title: Welcome to Audio Channel Queue
+title: Welcome to AudioQ
 description: Multi-channel audio queue management for browsers with TypeScript support
 ---
 
-# Audio Channel Queue Documentation
+# AudioQ Documentation
 
 <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
-  <a href="https://www.npmjs.com/package/audio-channel-queue" target="_blank" rel="noopener noreferrer">
-    <img src="https://img.shields.io/npm/v/audio-channel-queue?style=flat-square&logo=npm&label=version" alt="NPM Version" />
+  <a href="https://www.npmjs.com/package/audioq" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.shields.io/npm/v/audioq?style=flat-square&logo=npm&label=version" alt="NPM Version" />
   </a>
-  <a href="https://github.com/tonycarpenter21/audio-channel-queue" target="_blank" rel="noopener noreferrer">
-    <img src="https://img.shields.io/github/stars/tonycarpenter21/audio-channel-queue?style=flat-square&logo=github" alt="GitHub Stars" />
+  <a href="https://github.com/tonycarpenter21/audioq" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.shields.io/github/stars/tonycarpenter21/audioq?style=flat-square&logo=github" alt="GitHub Stars" />
   </a>
-  <a href="https://github.com/tonycarpenter21/audio-channel-queue/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">
-    <img src="https://img.shields.io/npm/l/audio-channel-queue?style=flat-square" alt="License" />
+  <a href="https://github.com/tonycarpenter21/audioq/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.shields.io/npm/l/audioq?style=flat-square" alt="License" />
   </a>
 </div>
 
-Welcome to **Audio Channel Queue** - the most comprehensive solution for managing audio playback in browser applications!
+Welcome to **AudioQ** - the most comprehensive solution for managing audio playback in browser applications!
 
-## What is Audio Channel Queue?
+## What is AudioQ?
 
-Audio Channel Queue is a powerful TypeScript library that enables you to manage multiple independent audio queues simultaneously. Perfect for games, interactive applications, and any project requiring sophisticated audio control.
+AudioQ is a powerful TypeScript library that enables you to manage multiple independent audio queues simultaneously. Perfect for games, interactive applications, and any project requiring sophisticated audio control.
 
 ### Key Features
 
@@ -45,11 +45,11 @@ Audio Channel Queue is a powerful TypeScript library that enables you to manage 
 Get up and running in 2 minutes:
 
 ```bash
-npm install audio-channel-queue
+npm install audioq
 ```
 
 ```typescript
-import { queueAudio, setChannelVolume } from 'audio-channel-queue';
+import { queueAudio, setChannelVolume } from 'audioq';
 
 // Play audio on channel 0
 await queueAudio('./sounds/music.mp3', 0);
@@ -125,17 +125,17 @@ await queueAudio('./ambient/office-noise.mp3', 0, { loop: true });
 
 ## Helpful Links
 
-- **[NPM Package](https://www.npmjs.com/package/audio-channel-queue)** - Install from npm
+- **[NPM Package](https://www.npmjs.com/package/audioq)** - Install from npm
 - **[Live Demo](https://tonycarpenter21.github.io/audio-queue-demo)** - See it in action
-- **[GitHub Repository](https://github.com/tonycarpenter21/audio-channel-queue)** - Source code
-- **[Report Issues](https://github.com/tonycarpenter21/audio-channel-queue/issues)** - Bug reports and feature requests
+- **[GitHub Repository](https://github.com/tonycarpenter21/audioq)** - Source code
+- **[Report Issues](https://github.com/tonycarpenter21/audioq/issues)** - Bug reports and feature requests
 
 ## Community & Support
 
 Need help? Have questions? 
 
-- **[GitHub Discussions](https://github.com/tonycarpenter21/audio-channel-queue/discussions)** - Ask questions and share ideas
-- **[GitHub Issues](https://github.com/tonycarpenter21/audio-channel-queue/issues)** - Report bugs or request features
+- **[GitHub Discussions](https://github.com/tonycarpenter21/audioq/discussions)** - Ask questions and share ideas
+- **[GitHub Issues](https://github.com/tonycarpenter21/audioq/issues)** - Report bugs or request features
 
 ---
 

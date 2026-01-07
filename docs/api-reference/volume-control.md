@@ -37,7 +37,7 @@ enum EasingType {
 ### Examples
 
 ```typescript
-import { setChannelVolume } from 'audio-channel-queue';
+import { setChannelVolume } from 'audioq';
 
 // Set channel 0 to half volume
 await setChannelVolume(0, 0.5);
@@ -95,7 +95,7 @@ getChannelVolume(channelNumber?: number = 0): number
 ### Examples
 
 ```typescript
-import { getChannelVolume, setChannelVolume } from 'audio-channel-queue';
+import { getChannelVolume, setChannelVolume } from 'audioq';
 
 // Set and then get volume
 await setChannelVolume(0, 0.75);
@@ -126,7 +126,7 @@ setAllChannelsVolume(volume: number): Promise<void>
 ### Examples
 
 ```typescript
-import { setAllChannelsVolume, getChannelVolume } from 'audio-channel-queue';
+import { setAllChannelsVolume, getChannelVolume } from 'audioq';
 
 // Set all channels to 50% volume
 await setAllChannelsVolume(0.5);
@@ -159,7 +159,7 @@ getAllChannelsVolume(): number[]
 ### Examples
 
 ```typescript
-import { getAllChannelsVolume } from 'audio-channel-queue';
+import { getAllChannelsVolume } from 'audioq';
 
 // Get all channel volumes
 const volumes = getAllChannelsVolume();
@@ -192,7 +192,7 @@ The global volume acts as a **multiplier** - it scales all channel volumes propo
 ### Examples
 
 ```typescript
-import { setGlobalVolume, setChannelVolume } from 'audio-channel-queue';
+import { setGlobalVolume, setChannelVolume } from 'audioq';
 
 // Set up different audio types with individual volumes
 await setChannelVolume(0, 0.3); // SFX channel at 30%
@@ -250,7 +250,7 @@ getGlobalVolume(): number
 ### Examples
 
 ```typescript
-import { getGlobalVolume, setGlobalVolume } from 'audio-channel-queue';
+import { getGlobalVolume, setGlobalVolume } from 'audioq';
 
 // Get current global volume
 const globalVol = getGlobalVolume(); // Returns current global volume (0-1)
@@ -301,7 +301,7 @@ transitionVolume(
 ### Examples
 
 ```typescript
-import { transitionVolume } from 'audio-channel-queue';
+import { transitionVolume } from 'audioq';
 
 // Smooth duck to 20% over 300ms
 await transitionVolume(0, 0.2, 300, EasingType.EaseIn);
@@ -337,7 +337,7 @@ interface FadeConfig {
 ### Examples
 
 ```typescript
-import { getFadeConfig } from 'audio-channel-queue';
+import { getFadeConfig } from 'audioq';
 
 // Get gentle fade configuration
 const config = getFadeConfig('gentle');
@@ -363,7 +363,7 @@ cancelVolumeTransition(channelNumber: number): void
 ### Examples
 
 ```typescript
-import { transitionVolume, cancelVolumeTransition } from 'audio-channel-queue';
+import { transitionVolume, cancelVolumeTransition } from 'audioq';
 
 // Start a long fade
 transitionVolume(0, 0, 5000); // 5 second fade out
@@ -388,7 +388,7 @@ cancelAllVolumeTransitions(): void
 ### Examples
 
 ```typescript
-import { cancelAllVolumeTransitions, stopAllAudio } from 'audio-channel-queue';
+import { cancelAllVolumeTransitions, stopAllAudio } from 'audioq';
 
 // Emergency stop all transitions
 cancelAllVolumeTransitions();

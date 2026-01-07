@@ -3,7 +3,7 @@ import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
-  title: 'Audio Channel Queue',
+  title: 'AudioQ',
   tagline: 'Multi-channel audio queue management for browsers',
   favicon: 'img/favicon.svg',
 
@@ -48,7 +48,7 @@ const config: Config = {
       respectPrefersColorScheme: true,
     },
     navbar: {
-      title: '🔊 Audio Channel Queue',
+      title: '🔊 AudioQ',
       items: [
         {
           type: 'docSidebar',
@@ -57,7 +57,7 @@ const config: Config = {
           label: 'Documentation',
         },
         {
-          href: 'https://www.npmjs.com/package/audio-channel-queue',
+          href: 'https://www.npmjs.com/package/audioq',
           label: 'NPM Package',
           position: 'right',
         },
@@ -67,7 +67,7 @@ const config: Config = {
           position: 'right',
         },
         {
-          href: 'https://github.com/tonycarpenter21/audio-channel-queue',
+          href: 'https://github.com/tonycarpenter21/audioq',
           label: 'GitHub',
           position: 'right',
         },
@@ -98,7 +98,7 @@ const config: Config = {
           items: [
             {
               label: 'NPM Package',
-              href: 'https://www.npmjs.com/package/audio-channel-queue',
+              href: 'https://www.npmjs.com/package/audioq',
             },
             {
               label: 'Live Demo',
@@ -106,7 +106,7 @@ const config: Config = {
             },
             {
               label: 'GitHub Repository',
-              href: 'https://github.com/tonycarpenter21/audio-channel-queue',
+              href: 'https://github.com/tonycarpenter21/audioq',
             },
           ],
         },
@@ -115,16 +115,16 @@ const config: Config = {
           items: [
             {
               label: 'Issues',
-              href: 'https://github.com/tonycarpenter21/audio-channel-queue/issues',
+              href: 'https://github.com/tonycarpenter21/audioq/issues',
             },
             {
               label: 'Discussions',
-              href: 'https://github.com/tonycarpenter21/audio-channel-queue/discussions',
+              href: 'https://github.com/tonycarpenter21/audioq/discussions',
             },
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} Audio Channel Queue. Built with Docusaurus.`,
+      copyright: `Copyright © ${new Date().getFullYear()} AudioQ.`,
     },
     prism: {
       theme: prismThemes.github,

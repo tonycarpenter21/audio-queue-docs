@@ -36,7 +36,7 @@ interface AudioInfo {
 ### Examples
 
 ```typescript
-import { getCurrentAudioInfo, queueAudio } from 'audio-channel-queue';
+import { getCurrentAudioInfo, queueAudio } from 'audioq';
 
 // Start playing audio
 await queueAudio('/audio/music.mp3');
@@ -142,7 +142,7 @@ getAllChannelsInfo(): (AudioInfo | null)[]
 ### Examples
 
 ```typescript
-import { getAllChannelsInfo, queueAudio } from 'audio-channel-queue';
+import { getAllChannelsInfo, queueAudio } from 'audioq';
 
 // Start audio on multiple channels
 await queueAudio('/audio/music.mp3', 0);
@@ -284,7 +284,7 @@ interface QueueItem {
 ### Examples
 
 ```typescript
-import { getQueueSnapshot, queueAudio } from 'audio-channel-queue';
+import { getQueueSnapshot, queueAudio } from 'audioq';
 
 // Queue multiple audio files on channel 0
 await queueAudio('/audio/track1.mp3');

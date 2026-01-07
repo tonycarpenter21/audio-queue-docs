@@ -15,7 +15,7 @@ pauseChannel(channelNumber?: number = 0): Promise<void>
 ### Examples
 
 ```typescript
-import { pauseChannel, resumeChannel } from 'audio-channel-queue';
+import { pauseChannel, resumeChannel } from 'audioq';
 
 // Pause music channel
 await pauseChannel(0);
@@ -52,7 +52,7 @@ resumeChannel(channelNumber?: number = 0): Promise<void>
 ### Examples
 
 ```typescript
-import { pauseChannel, resumeChannel } from 'audio-channel-queue';
+import { pauseChannel, resumeChannel } from 'audioq';
 
 // Resume music channel
 await resumeChannel(0);
@@ -80,7 +80,7 @@ togglePauseChannel(channelNumber?: number = 0): Promise<void>
 ### Examples
 
 ```typescript
-import { togglePauseChannel } from 'audio-channel-queue';
+import { togglePauseChannel } from 'audioq';
 
 // Toggle music playback with a single function
 async function toggleMusic(): Promise<void> {
@@ -130,7 +130,7 @@ pauseAllChannels(): Promise<void>
 ### Examples
 
 ```typescript
-import { pauseAllChannels, resumeAllChannels } from 'audio-channel-queue';
+import { pauseAllChannels, resumeAllChannels } from 'audioq';
 
 // Global pause functionality
 async function pauseAllAudio(): Promise<void> {
@@ -172,7 +172,7 @@ resumeAllChannels(): Promise<void>
 ### Examples
 
 ```typescript
-import { pauseAllChannels, resumeAllChannels } from 'audio-channel-queue';
+import { pauseAllChannels, resumeAllChannels } from 'audioq';
 
 // Global resume functionality
 async function resumeAllAudio(): Promise<void> {
@@ -198,7 +198,7 @@ togglePauseAllChannels(): Promise<void>
 ### Examples
 
 ```typescript
-import { togglePauseAllChannels } from 'audio-channel-queue';
+import { togglePauseAllChannels } from 'audioq';
 
 // Play/pause control
 async function playbackToggle(): Promise<void> {
@@ -231,7 +231,7 @@ isChannelPaused(channelNumber?: number = 0): boolean
 ### Examples
 
 ```typescript
-import { isChannelPaused, pauseChannel, resumeChannel } from 'audio-channel-queue';
+import { isChannelPaused, pauseChannel, resumeChannel } from 'audioq';
 
 // Conditional pause/resume logic
 async function smartToggle(channel: number): Promise<void> {
@@ -290,7 +290,7 @@ getAllChannelsPauseState(): boolean[]
 ### Examples
 
 ```typescript
-import { getAllChannelsPauseState } from 'audio-channel-queue';
+import { getAllChannelsPauseState } from 'audioq';
 
 // Get pause state for all channels
 const pauseStates = getAllChannelsPauseState();
@@ -330,7 +330,7 @@ pauseWithFade(fadeType?: FadeType, channelNumber?: number, duration?: number): P
 ### Examples
 
 ```typescript
-import { pauseWithFade, FadeType } from 'audio-channel-queue';
+import { pauseWithFade, FadeType } from 'audioq';
 
 // Pause with default gentle fade (FadeType.Gentle, channel 0, 800ms)
 await pauseWithFade();
@@ -366,7 +366,7 @@ resumeWithFade(fadeType?: FadeType, channelNumber?: number, duration?: number): 
 ### Examples
 
 ```typescript
-import { pauseWithFade, resumeWithFade, FadeType } from 'audio-channel-queue';
+import { pauseWithFade, resumeWithFade, FadeType } from 'audioq';
 
 // Pause then resume with automatic paired curves
 await pauseWithFade(FadeType.Gentle); // Pauses with ease-out
@@ -403,7 +403,7 @@ togglePauseWithFade(fadeType?: FadeType, channelNumber?: number, duration?: numb
 ### Examples
 
 ```typescript
-import { togglePauseWithFade, FadeType } from 'audio-channel-queue';
+import { togglePauseWithFade, FadeType } from 'audioq';
 
 // Toggle with default gentle fade
 await togglePauseWithFade();
@@ -433,7 +433,7 @@ pauseAllWithFade(fadeType?: FadeType, duration?: number): Promise<void>
 ### Examples
 
 ```typescript
-import { pauseAllWithFade, FadeType } from 'audio-channel-queue';
+import { pauseAllWithFade, FadeType } from 'audioq';
 
 // Pause all channels with gentle fade
 await pauseAllWithFade();
@@ -463,7 +463,7 @@ resumeAllWithFade(fadeType?: FadeType, duration?: number): Promise<void>
 ### Examples
 
 ```typescript
-import { pauseAllWithFade, resumeAllWithFade, FadeType } from 'audio-channel-queue';
+import { pauseAllWithFade, resumeAllWithFade, FadeType } from 'audioq';
 
 // Resume all with their paired fade curves
 await resumeAllWithFade();
@@ -493,7 +493,7 @@ togglePauseAllWithFade(fadeType?: FadeType, duration?: number): Promise<void>
 ### Examples
 
 ```typescript
-import { togglePauseAllWithFade, FadeType } from 'audio-channel-queue';
+import { togglePauseAllWithFade, FadeType } from 'audioq';
 
 // Toggle all with default gentle fade
 await togglePauseAllWithFade();
@@ -530,7 +530,7 @@ The fade functions support three fade types via the `FadeType` enum:
 Automatically pause audio based on system events:
 
 ```typescript
-import { pauseAllChannels, resumeChannel, getAllChannelsPauseState } from 'audio-channel-queue';
+import { pauseAllChannels, resumeChannel, getAllChannelsPauseState } from 'audioq';
 
 class SmartAudioManager {
   private wasPlayingBeforePause: { [channel: number]: boolean } = {};
@@ -574,7 +574,7 @@ class SmartAudioManager {
 Create complex fade behaviors:
 
 ```typescript
-import { pauseWithFade, resumeWithFade, FadeType, isChannelPaused } from 'audio-channel-queue';
+import { pauseWithFade, resumeWithFade, FadeType, isChannelPaused } from 'audioq';
 
 // Smooth cross-fade between channels
 async function crossFadeChannels(fadeOutChannel: number, fadeInChannel: number): Promise<void> {
@@ -624,7 +624,7 @@ class ProximityFader {
 Pause based on application state:
 
 ```typescript
-import { pauseAllChannels, pauseChannel } from 'audio-channel-queue';
+import { pauseAllChannels, pauseChannel } from 'audioq';
 
 class ConditionalPauseManager {
   private shouldAutoPause: boolean = true;

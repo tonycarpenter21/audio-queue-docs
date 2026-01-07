@@ -1,12 +1,12 @@
 ---
 sidebar_position: 2
 title: Quick Start
-description: Get up and running with audio-channel-queue in 5 minutes
+description: Get up and running with AudioQ in 5 minutes
 ---
 
 # Quick Start Guide
 
-Get up and running with Audio Channel Queue in just **5 minutes**! This guide will walk you through creating your first multi-channel audio application.
+Get up and running with AudioQ in just **5 minutes**! This guide will walk you through creating your first multi-channel audio application.
 
 ## What We'll Build
 
@@ -22,7 +22,7 @@ By the end of this guide, you'll have:
 Let's start with the simplest possible example:
 
 ```typescript
-import { queueAudio } from 'audio-channel-queue';
+import { queueAudio } from 'audioq';
 
 // Play a sound immediately
 await queueAudio('./sounds/welcome.mp3');
@@ -37,7 +37,7 @@ That's it! Your first audio is playing. But let's make it more interesting...
 Now let's use multiple channels to play different types of audio simultaneously:
 
 ```typescript
-import { queueAudio, setChannelVolume } from 'audio-channel-queue';
+import { queueAudio, setChannelVolume } from 'audioq';
 
 // Background music on channel 0 (quieter)
 await queueAudio('./music/background.mp3', 0, { 
@@ -64,7 +64,7 @@ import {
   resumeChannel, 
   pauseAllChannels,
   resumeAllChannels
-} from 'audio-channel-queue';
+} from 'audioq';
 
 // Start some audio
 await queueAudio('./music/background.mp3', 0, { loop: true });
@@ -89,7 +89,7 @@ setTimeout(async () => {
 Control the volume of individual channels or all channels at once:
 
 ```typescript
-import { setChannelVolume, setAllChannelsVolume, getChannelVolume } from 'audio-channel-queue';
+import { setChannelVolume, setAllChannelsVolume, getChannelVolume } from 'audioq';
 
 // Set individual channel volumes
 await setChannelVolume(0, 0.2);  // Background music: 20%
@@ -114,7 +114,7 @@ import {
   onAudioComplete,
   onAudioProgress,
   onQueueChange
-} from 'audio-channel-queue';
+} from 'audioq';
 
 // Listen for when audio starts playing
 onAudioStart(0, (info) => {
@@ -153,7 +153,7 @@ import {
   queueAudioPriority,
   stopCurrentAudioInChannel,
   stopAllAudioInChannel
-} from 'audio-channel-queue';
+} from 'audioq';
 
 // Queue up some background music
 await queueAudio('./music/song1.mp3', 0);
@@ -172,7 +172,7 @@ await stopCurrentAudioInChannel(0);
 
 ## Complete Example: Simple Game Audio
 
-Here's a complete example showing how you might use Audio Channel Queue in a simple game:
+Here's a complete example showing how you might use AudioQ in a simple game:
 
 ```typescript
 import { 
@@ -183,7 +183,7 @@ import {
   pauseAllChannels,
   resumeAllChannels,
   onAudioStart
-} from 'audio-channel-queue';
+} from 'audioq';
 
 class GameAudio {
   constructor() {
@@ -253,7 +253,7 @@ setTimeout(async () => await gameAudio.gameOver(), 3000);
 
 ## What's Next?
 
-Congratulations! You now have a solid foundation with Audio Channel Queue. Here's what to explore next:
+Congratulations! You now have a solid foundation with AudioQ. Here's what to explore next:
 
 ### **[Core Concepts](../core-concepts/audio-channels)**
 Understand how channels, queues, and the audio lifecycle work

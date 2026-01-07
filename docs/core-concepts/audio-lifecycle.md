@@ -4,7 +4,7 @@ Understanding the complete audio lifecycle from queueing to completion, includin
 
 ## Audio Lifecycle Overview
 
-Every audio file in the audio-channel-queue system goes through a well-defined lifecycle with distinct phases, state transitions, and events. Understanding this lifecycle is crucial for building robust audio applications.
+Every audio file in the AudioQ system goes through a well-defined lifecycle with distinct phases, state transitions, and events. Understanding this lifecycle is crucial for building robust audio applications.
 
 ```typescript
 import { 
@@ -13,7 +13,7 @@ import {
   onAudioProgress, 
   onAudioComplete, 
   getCurrentAudioInfo 
-} from 'audio-channel-queue';
+} from 'audioq';
 
 // Complete lifecycle example
 async function demonstrateLifecycle(): Promise<void> {
@@ -50,7 +50,7 @@ async function demonstrateLifecycle(): Promise<void> {
 Audio enters the system when queued on a channel:
 
 ```typescript
-import { queueAudio, queueAudioPriority, getQueueSnapshot, stopCurrentAudioInChannel } from 'audio-channel-queue';
+import { queueAudio, queueAudioPriority, getQueueSnapshot, stopCurrentAudioInChannel } from 'audioq';
 
 class AudioLifecycleTracker {
   async trackQueuePhase(): Promise<void> {
@@ -84,7 +84,7 @@ class AudioLifecycleTracker {
 Before playback begins, the audio element is prepared:
 
 ```typescript
-import { onAudioStart, AudioStartInfo } from 'audio-channel-queue';
+import { onAudioStart, AudioStartInfo } from 'audioq';
 
 class LoadingPhaseTracker {
   setupLoadingTracking(): void {
@@ -115,7 +115,7 @@ class LoadingPhaseTracker {
 During active playback, continuous progress events are fired:
 
 ```typescript
-import { onAudioProgress, AudioInfo } from 'audio-channel-queue';
+import { onAudioProgress, AudioInfo } from 'audioq';
 
 class PlaybackPhaseTracker {
   private milestones: Set<number> = new Set();
@@ -183,7 +183,7 @@ class PlaybackPhaseTracker {
 Audio lifecycle ends either naturally or through interruption:
 
 ```typescript
-import { onAudioComplete, stopCurrentAudioInChannel, AudioCompleteInfo } from 'audio-channel-queue';
+import { onAudioComplete, stopCurrentAudioInChannel, AudioCompleteInfo } from 'audioq';
 
 class CompletionPhaseTracker {
   setupCompletionTracking(): void {
@@ -267,7 +267,7 @@ import {
   stopCurrentAudioInChannel,
   queueAudio,
   FadeType
-} from 'audio-channel-queue';
+} from 'audioq';
 
 enum AudioLifecycleState {
   IDLE = 'idle',
@@ -566,7 +566,7 @@ import {
   AudioStartInfo,
   AudioCompleteInfo,
   AudioInfo
-} from 'audio-channel-queue';
+} from 'audioq';
 
 class AudioLifecycleAnalytics {
   private lifecycleEvents: Array<{

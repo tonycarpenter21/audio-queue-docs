@@ -33,7 +33,7 @@ validateAudioUrl(url: string): string
 ### Examples
 
 ```typescript
-import { validateAudioUrl } from 'audio-channel-queue';
+import { validateAudioUrl } from 'audioq';
 
 // Valid URLs
 validateAudioUrl('https://example.com/audio.mp3'); // OK
@@ -65,7 +65,7 @@ sanitizeForDisplay(text: string): string
 ### Examples
 
 ```typescript
-import { sanitizeForDisplay } from 'audio-channel-queue';
+import { sanitizeForDisplay } from 'audioq';
 
 // Escapes HTML characters
 sanitizeForDisplay('<script>alert("XSS")</script>'); 
@@ -96,7 +96,7 @@ extractFileName(url: string): string
 ### Examples
 
 ```typescript
-import { extractFileName } from 'audio-channel-queue';
+import { extractFileName } from 'audioq';
 
 extractFileName('https://example.com/audio/song.mp3'); // Returns: 'song.mp3'
 extractFileName('/path/to/audio.wav'); // Returns: 'audio.wav'
@@ -124,7 +124,7 @@ cleanWebpackFilename(fileName: string): string
 ### Examples
 
 ```typescript
-import { cleanWebpackFilename } from 'audio-channel-queue';
+import { cleanWebpackFilename } from 'audioq';
 
 cleanWebpackFilename('song.a1b2c3d4.mp3'); // Returns: 'song.mp3'
 cleanWebpackFilename('notification.1a2b3c4d5e6f.wav'); // Returns: 'notification.wav'
@@ -158,7 +158,7 @@ getAudioInfoFromElement(
 ### Examples
 
 ```typescript
-import { getAudioInfoFromElement } from 'audio-channel-queue';
+import { getAudioInfoFromElement } from 'audioq';
 
 const audioElement = new Audio('song.mp3');
 await audioElement.load(); // Ensure metadata is loaded
@@ -195,7 +195,7 @@ createQueueSnapshot(
 ### Examples
 
 ```typescript
-import { createQueueSnapshot, audioChannels } from 'audio-channel-queue';
+import { createQueueSnapshot, audioChannels } from 'audioq';
 
 const snapshot = createQueueSnapshot(0, audioChannels);
 if (snapshot) {

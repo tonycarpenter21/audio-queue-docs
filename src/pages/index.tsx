@@ -31,17 +31,17 @@ function HomepageHeader(): React.JSX.Element {
           </Link>
         </div>
         <div className={styles['quick-install']}>
-          <code>npm install audio-channel-queue</code>
+          <code>npm install audioq</code>
         </div>
         <div className={styles['npm-shields']}>
-          <a href="https://www.npmjs.com/package/audio-channel-queue" target="_blank" rel="noopener noreferrer">
-            <img src="https://img.shields.io/npm/v/audio-channel-queue?style=flat-square&logo=npm&label=version" alt="NPM Version" />
+          <a href="https://www.npmjs.com/package/audioq" target="_blank" rel="noopener noreferrer">
+            <img src="https://img.shields.io/npm/v/audioq?style=flat-square&logo=npm&label=version" alt="NPM Version" />
           </a>
-          <a href="https://github.com/tonycarpenter21/audio-channel-queue" target="_blank" rel="noopener noreferrer">
-            <img src="https://img.shields.io/github/stars/tonycarpenter21/audio-channel-queue?style=flat-square&logo=github" alt="GitHub Stars" />
+          <a href="https://github.com/tonycarpenter21/audioq" target="_blank" rel="noopener noreferrer">
+            <img src="https://img.shields.io/github/stars/tonycarpenter21/audioq?style=flat-square&logo=github" alt="GitHub Stars" />
           </a>
-          <a href="https://github.com/tonycarpenter21/audio-channel-queue/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">
-            <img src="https://img.shields.io/npm/l/audio-channel-queue?style=flat-square" alt="License" />
+          <a href="https://github.com/tonycarpenter21/audioq/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">
+            <img src="https://img.shields.io/npm/l/audioq?style=flat-square" alt="License" />
           </a>
         </div>
       </div>

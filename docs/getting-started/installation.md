@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
 title: Installation
-description: How to install and set up audio-channel-queue in your project
+description: How to install and set up AudioQ in your project
 ---
 
 # Installation
@@ -9,19 +9,19 @@ description: How to install and set up audio-channel-queue in your project
 ## Install with npm
 
 ```bash
-npm install audio-channel-queue
+npm install audioq
 ```
 
 ## Install with yarn
 
 ```bash
-yarn add audio-channel-queue
+yarn add audioq
 ```
 
 ## Install with pnpm
 
 ```bash
-pnpm add audio-channel-queue
+pnpm add audioq
 ```
 
 ## Requirements
@@ -44,7 +44,7 @@ import {
   setChannelVolume, 
   pauseChannel,
   onAudioStart 
-} from 'audio-channel-queue';
+} from 'audioq';
 
 // Start using immediately!
 await queueAudio('./sounds/welcome.mp3');
@@ -57,7 +57,7 @@ const {
   queueAudio, 
   setChannelVolume, 
   pauseChannel 
-} = require('audio-channel-queue');
+} = require('audioq');
 
 // Start using immediately!
 await queueAudio('./sounds/welcome.mp3');
@@ -66,7 +66,7 @@ await queueAudio('./sounds/welcome.mp3');
 ### UMD (Browser Script Tag)
 
 ```html
-<script src="node_modules/audio-channel-queue/dist/index.umd.js"></script>
+<script src="node_modules/audioq/dist/index.umd.js"></script>
 <script>
   // Available as global AudioChannelQueue
   await AudioChannelQueue.queueAudio('./sounds/welcome.mp3');
@@ -128,7 +128,7 @@ Update your `tsconfig.json` to include type declarations:
 
 ### Supported Formats
 
-Audio Channel Queue supports all formats that the browser's `HTMLAudioElement` supports:
+AudioQ supports all formats that the browser's `HTMLAudioElement` supports:
 
 - **MP3** - Universal support, good compression
 - **WAV** - Uncompressed, high quality, larger files
@@ -185,7 +185,7 @@ CRA handles audio files by default when imported:
 
 ```typescript
 import welcomeSound from './audio/welcome.mp3';
-import { queueAudio } from 'audio-channel-queue';
+import { queueAudio } from 'audioq';
 
 // Use the imported path
 await queueAudio(welcomeSound);
@@ -196,7 +196,7 @@ await queueAudio(welcomeSound);
 Create a simple test to verify everything is working:
 
 ```typescript title="test-audio.ts"
-import { queueAudio, onAudioStart } from 'audio-channel-queue';
+import { queueAudio, onAudioStart } from 'audioq';
 
 // Set up event listener
 onAudioStart(0, (info) => {
@@ -208,7 +208,7 @@ onAudioStart(0, (info) => {
 export async function testAudio(): Promise<void> {
   try {
     await queueAudio('./audio/test-sound.mp3');
-    console.log('Audio Channel Queue is working!');
+    console.log('AudioQ is working!');
   } catch (error) {
     console.error('Error playing audio:', error);
   }
@@ -247,8 +247,8 @@ npm install
 If you're still having issues:
 
 1. Check the [troubleshooting guide](../migration/troubleshooting)
-2. Search [existing issues](https://github.com/tonycarpenter21/audio-channel-queue/issues)
-3. Open a [new issue](https://github.com/tonycarpenter21/audio-channel-queue/issues/new) with:
+2. Search [existing issues](https://github.com/tonycarpenter21/audioq/issues)
+3. Open a [new issue](https://github.com/tonycarpenter21/audioq/issues/new) with:
    - Your environment details (OS, browser, Node.js version)
    - Build tool configuration
    - Error messages
@@ -256,6 +256,6 @@ If you're still having issues:
 
 ## Next Steps
 
-Now that you have audio-channel-queue installed, let's create your first audio queue:
+Now that you have AudioQ installed, let's create your first audio queue:
 
 **[Quick Start Guide](./quick-start)** - Build your first audio application in 5 minutes 

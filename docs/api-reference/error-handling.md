@@ -48,7 +48,7 @@ enum AudioErrorType {
 #### Examples
 
 ```typescript
-import { onAudioError } from 'audio-channel-queue';
+import { onAudioError } from 'audioq';
 
 // Basic error handling
 onAudioError(0, (errorInfo) => {
@@ -102,7 +102,7 @@ offAudioError(channelNumber?: number = 0, callback?: AudioErrorCallback): void
 #### Examples
 
 ```typescript
-import { offAudioError } from 'audio-channel-queue';
+import { offAudioError } from 'audioq';
 
 // Remove all error listeners from default channel
 offAudioError();
@@ -142,7 +142,7 @@ interface ErrorRecoveryOptions {
 #### Examples
 
 ```typescript
-import { setErrorRecovery } from 'audio-channel-queue';
+import { setErrorRecovery } from 'audioq';
 
 // Basic error recovery
 setErrorRecovery({
@@ -188,7 +188,7 @@ interface ErrorRecoveryOptions {
 #### Examples
 
 ```typescript
-import { getErrorRecovery } from 'audio-channel-queue';
+import { getErrorRecovery } from 'audioq';
 
 // Check current settings
 const recovery = getErrorRecovery();
@@ -229,7 +229,7 @@ interface RetryConfig = {
 #### Examples
 
 ```typescript
-import { setRetryConfig } from 'audio-channel-queue';
+import { setRetryConfig } from 'audioq';
 
 // Basic retry configuration
 setRetryConfig({
@@ -287,7 +287,7 @@ interface RetryConfig = {
 #### Examples
 
 ```typescript
-import { getRetryConfig } from 'audio-channel-queue';
+import { getRetryConfig } from 'audioq';
 
 const config = getRetryConfig();
 
@@ -318,7 +318,7 @@ retryFailedAudio(channelNumber?: number = 0): Promise<boolean>
 #### Examples
 
 ```typescript
-import { retryFailedAudio } from 'audio-channel-queue';
+import { retryFailedAudio } from 'audioq';
 
 // Retry failed audio on default channel
 const success = await retryFailedAudio();
@@ -368,7 +368,7 @@ import {
   getQueueSnapshot,
   AudioErrorInfo,
   AudioErrorType
-} from 'audio-channel-queue';
+} from 'audioq';
 
 class AudioLoadingErrorHandler {
   private loadingTimeouts: Map<string, NodeJS.Timeout> = new Map();
@@ -461,7 +461,7 @@ import {
   AudioQueueOptions,
   AudioErrorInfo,
   AudioErrorType
-} from 'audio-channel-queue';
+} from 'audioq';
 
 class NetworkAwareAudioManager {
   private isOnline: boolean = navigator.onLine;
@@ -600,7 +600,7 @@ import {
   retryFailedAudio,
   AudioErrorInfo,
   AudioErrorType
-} from 'audio-channel-queue';
+} from 'audioq';
 
 class AudioErrorManager {
   constructor() {

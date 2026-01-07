@@ -7,7 +7,7 @@ Understanding how audio queuing works within channels and how to manage playback
 Each audio channel maintains its own **First-In-First-Out (FIFO)** queue that automatically manages audio playback order. When you queue audio, it gets added to the end of the channel's queue and plays when it's turn comes.
 
 ```typescript
-import { queueAudio, queueAudioPriority, getQueueSnapshot } from 'audio-channel-queue';
+import { queueAudio, queueAudioPriority, getQueueSnapshot } from 'audioq';
 
 // Queue multiple audio files - they play in order (using default channel 0)
 await queueAudio('./audio/track1.mp3');
@@ -27,7 +27,7 @@ console.log(`Queue has ${snapshot.totalItems} items`);
 With `queueAudio()`, files are added to the end of the queue:
 
 ```typescript
-import { queueAudio, onAudioStart } from 'audio-channel-queue';
+import { queueAudio, onAudioStart } from 'audioq';
 
 // Setup logging to see the order
 onAudioStart(0, (info) => {
@@ -47,7 +47,7 @@ await queueAudio('./music/outro.mp3');        // Plays after main-theme
 With `queueAudioPriority()`, files interrupt current playback and jump to the front:
 
 ```typescript
-import { queueAudio, queueAudioPriority, stopCurrentAudioInChannel } from 'audio-channel-queue';
+import { queueAudio, queueAudioPriority, stopCurrentAudioInChannel } from 'audioq';
 
 // Start with background music (using default channel 0)
 await queueAudio('./music/background.mp3');
@@ -64,7 +64,7 @@ await stopCurrentAudioInChannel(); // This stops the currently playing sound
 Get complete information about a channel's queue:
 
 ```typescript
-import { getQueueSnapshot, QueueSnapshot } from 'audio-channel-queue';
+import { getQueueSnapshot, QueueSnapshot } from 'audioq';
 
 function analyzeQueue(channel: number): void {
   const snapshot: QueueSnapshot | null = channel === 0 ? getQueueSnapshot() : getQueueSnapshot(channel);
@@ -97,7 +97,7 @@ analyzeQueue(1);  // Must be explicit: getQueueSnapshot(1)
 ### Real-time Queue Monitoring
 
 ```typescript
-import { onQueueChange } from 'audio-channel-queue';
+import { onQueueChange } from 'audioq';
 
 class QueueMonitor {
   setupQueueTracking(channel: number): void {
@@ -130,7 +130,7 @@ class QueueMonitor {
 ### Playlist Management
 
 ```typescript
-import { queueAudio, stopCurrentAudioInChannel, queueAudioPriority, onAudioComplete } from 'audio-channel-queue';
+import { queueAudio, stopCurrentAudioInChannel, queueAudioPriority, onAudioComplete } from 'audioq';
 
 class PlaylistManager {
   private playlist: string[] = [];
@@ -197,7 +197,7 @@ await musicPlayer.startPlaylist();
 ### Dynamic Content Insertion
 
 ```typescript
-import { queueAudio, queueAudioPriority, pauseChannel, resumeChannel, onAudioComplete } from 'audio-channel-queue';
+import { queueAudio, queueAudioPriority, pauseChannel, resumeChannel, onAudioComplete } from 'audioq';
 
 class DynamicContentManager {
   private baseChannel: number = 0;
@@ -229,7 +229,7 @@ class DynamicContentManager {
 ### Gaming Audio Queues
 
 ```typescript
-import { queueAudio, queueAudioPriority, stopCurrentAudioInChannel } from 'audio-channel-queue';
+import { queueAudio, queueAudioPriority, stopCurrentAudioInChannel } from 'audioq';
 
 class GameAudioQueue {
   private musicChannel: number = 0;

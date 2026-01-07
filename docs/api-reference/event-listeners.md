@@ -26,7 +26,7 @@ interface AudioStartInfo {
 ### Examples
 
 ```typescript
-import { onAudioStart, queueAudio } from 'audio-channel-queue';
+import { onAudioStart, queueAudio } from 'audioq';
 
 // Basic usage
 onAudioStart(0, (info) => {
@@ -81,7 +81,7 @@ offAudioStart(channelNumber?: number = 0): void
 ### Examples
 
 ```typescript
-import { onAudioStart, offAudioStart } from 'audio-channel-queue';
+import { onAudioStart, offAudioStart } from 'audioq';
 
 // Set up listener
 onAudioStart(0, (info) => {
@@ -163,7 +163,7 @@ interface AudioCompleteInfo {
 ### Examples
 
 ```typescript
-import { onAudioComplete, queueAudio } from 'audio-channel-queue';
+import { onAudioComplete, queueAudio } from 'audioq';
 
 // Track completion stats
 onAudioComplete(0, (info) => {
@@ -225,7 +225,7 @@ offAudioComplete(channelNumber?: number = 0): void
 ### Examples
 
 ```typescript
-import { onAudioComplete, offAudioComplete } from 'audio-channel-queue';
+import { onAudioComplete, offAudioComplete } from 'audioq';
 
 // Set up listener
 onAudioComplete(0, (info) => {
@@ -330,7 +330,7 @@ interface AudioInfo {
 ### Examples
 
 ```typescript
-import { onAudioPause, pauseChannel } from 'audio-channel-queue';
+import { onAudioPause, pauseChannel } from 'audioq';
 
 // Update UI when audio is paused
 onAudioPause(0, (channelNumber, info) => {
@@ -366,7 +366,7 @@ offAudioPause(channelNumber?: number = 0): void
 ### Examples
 
 ```typescript
-import { onAudioPause, offAudioPause } from 'audio-channel-queue';
+import { onAudioPause, offAudioPause } from 'audioq';
 
 // Set up listener
 onAudioPause(0, (channelNumber, info) => {
@@ -451,7 +451,7 @@ interface AudioInfo {
 ### Examples
 
 ```typescript
-import { onAudioResume, resumeChannel } from 'audio-channel-queue';
+import { onAudioResume, resumeChannel } from 'audioq';
 
 // Update UI when audio resumes
 onAudioResume(0, (channelNumber, info) => {
@@ -487,7 +487,7 @@ offAudioResume(channelNumber?: number = 0): void
 ### Examples
 
 ```typescript
-import { onAudioResume, offAudioResume } from 'audio-channel-queue';
+import { onAudioResume, offAudioResume } from 'audioq';
 
 // Set up listener
 onAudioResume(0, (channelNumber, info) => {
@@ -554,7 +554,7 @@ interface AudioInfo {
 ### Examples
 
 ```typescript
-import { onAudioProgress } from 'audio-channel-queue';
+import { onAudioProgress } from 'audioq';
 
 // Update progress bar
 onAudioProgress(0, (info) => {
@@ -611,7 +611,7 @@ offAudioProgress(channelNumber?: number = 0): void
 ### Examples
 
 ```typescript
-import { onAudioProgress, offAudioProgress } from 'audio-channel-queue';
+import { onAudioProgress, offAudioProgress } from 'audioq';
 
 // Setup progress listener
 onAudioProgress(0, (info) => {
@@ -660,7 +660,7 @@ interface QueueItem {
 ### Examples
 
 ```typescript
-import { onQueueChange, queueAudio, removeQueuedItem } from 'audio-channel-queue';
+import { onQueueChange, queueAudio, removeQueuedItem } from 'audioq';
 
 // Basic queue monitoring
 onQueueChange(0, (snapshot) => {
@@ -688,7 +688,7 @@ offQueueChange(channelNumber?: number = 0): void
 ### Examples
 
 ```typescript
-import { onQueueChange, offQueueChange } from 'audio-channel-queue';
+import { onQueueChange, offQueueChange } from 'audioq';
 
 // Set up queue monitoring
 onQueueChange(0, (snapshot) => {
@@ -725,7 +725,7 @@ import {
   offAudioStart,
   offAudioComplete,
   offAudioProgress 
-} from 'audio-channel-queue';
+} from 'audioq';
 
 // React example
 function AudioPlayer({ channel }: { channel: number }) {

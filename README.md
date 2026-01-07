@@ -1,10 +1,10 @@
-# Audio Channel Queue Documentation
+# AudioQ Documentation
 
 ## Quick Links
 
 - **Live Documentation**: [Docs](https://tonycarpenter21.github.io/audio-queue-docs/)
 - **Live Demo**: [Demo](https://tonycarpenter21.github.io/audio-queue-demo/queue-management)
-- **NPM Package**: [NPM Package](https://www.npmjs.com/package/audio-channel-queue)
+- **NPM Package**: [NPM Package](https://www.npmjs.com/package/audioq)
 
 ## Installation
 

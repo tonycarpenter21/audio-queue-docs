@@ -1,6 +1,6 @@
 ---
 title: Volume Ducking
-description: Advanced volume control and ducking techniques for audio-channel-queue
+description: Advanced volume control and ducking techniques for AudioQ
 sidebar_position: 1
 ---
 
@@ -8,7 +8,7 @@ sidebar_position: 1
 
 Volume ducking is a technique where the volume of background audio automatically reduces when priority audio (such as voice announcements) plays. This ensures important audio is clearly heard without manually adjusting volumes.
 
-In audio-channel-queue, ducking works by:
+In AudioQ, ducking works by:
 1. Designating a priority channel
 2. When audio plays on the priority channel, all other channels automatically reduce to a specified volume level
 3. When the priority channel becomes inactive (no audio playing), all other channels return to their original volumes
@@ -37,7 +37,7 @@ interface VolumeConfig {
 ### Basic Setup
 
 ```typescript
-import { setVolumeDucking, queueAudio } from 'audio-channel-queue';
+import { setVolumeDucking, queueAudio } from 'audioq';
 
 // Configure ducking
 setVolumeDucking({
@@ -62,7 +62,7 @@ To disable ducking, you can either:
 
 ```typescript
 // Method 1: Clear all ducking settings
-import { clearVolumeDucking } from 'audio-channel-queue';
+import { clearVolumeDucking } from 'audioq';
 clearVolumeDucking();
 
 // Method 2: Set ducking volume to 1.0 (no reduction)

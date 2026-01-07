@@ -33,7 +33,7 @@ interface AudioQueueOptions {
 
 **Basic Usage**
 ```typescript
-import { queueAudio } from 'audio-channel-queue';
+import { queueAudio } from 'audioq';
 
 // Play on default channel (0)
 await queueAudio('./sounds/welcome.mp3');
@@ -138,7 +138,7 @@ stopCurrentAudioInChannel(channelNumber?: number = 0): Promise<void>
 ### Examples
 
 ```typescript
-import { stopCurrentAudioInChannel } from 'audio-channel-queue';
+import { stopCurrentAudioInChannel } from 'audioq';
 
 // Skip to next song on default channel (0)
 await stopCurrentAudioInChannel();
@@ -242,7 +242,7 @@ destroyChannel(channelNumber: number = 0): Promise<void>
 ### Examples
 
 ```typescript
-import { destroyChannel } from 'audio-channel-queue';
+import { destroyChannel } from 'audioq';
 
 // Destroy a specific channel
 await destroyChannel(0);
@@ -262,7 +262,7 @@ destroyAllChannels(): void
 ### Examples
 
 ```typescript
-import { destroyAllChannels } from 'audio-channel-queue';
+import { destroyAllChannels } from 'audioq';
 
 // Complete cleanup
 destroyAllChannels();
@@ -288,7 +288,7 @@ setChannelQueueLimit(channelNumber: number, maxSize?: number): void
 ### Examples
 
 ```typescript
-import { setChannelQueueLimit } from 'audio-channel-queue';
+import { setChannelQueueLimit } from 'audioq';
 
 // Limit channel 0 to 10 items
 setChannelQueueLimit(0, 10);
@@ -348,7 +348,7 @@ interface QueueConfig {
 ### Examples
 
 ```typescript
-import { setQueueConfig, getQueueConfig } from 'audio-channel-queue';
+import { setQueueConfig, getQueueConfig } from 'audioq';
 
 // Set global configuration
 setQueueConfig({

@@ -1,12 +1,12 @@
 ---
 sidebar_position: 3
 title: Browser Compatibility
-description: Browser support and compatibility information for audio-channel-queue
+description: Browser support and compatibility information for AudioQ
 ---
 
 # Browser Compatibility
 
-Audio Channel Queue is designed for **browser environments** and uses the Web Audio API (`HTMLAudioElement`). Here's everything you need to know about browser support.
+AudioQ is designed for **browser environments** and uses the Web Audio API (`HTMLAudioElement`). Here's everything you need to know about browser support.
 
 ## Supported Browsers
 
@@ -50,7 +50,7 @@ Version 1.13.0 includes enhanced iOS compatibility:
 Provide multiple audio formats for maximum compatibility:
 
 ```typescript
-import { queueAudio } from 'audio-channel-queue';
+import { queueAudio } from 'audioq';
 
 async function playWithFallback(baseName: string) {
   const formats = ['.mp3', '.ogg', '.wav'];
@@ -79,7 +79,7 @@ await playWithFallback('./sounds/welcome');
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Audio Channel Queue Browser Test</title>
+  <title>AudioQ Browser Test</title>
 </head>
 <body>
   <h1>Browser Compatibility Test</h1>
@@ -110,10 +110,10 @@ await playWithFallback('./sounds/welcome');
           }
         },
         {
-          name: 'Audio Channel Queue Import',
+          name: 'AudioQ Import',
           test: async () => {
             try {
-              const module = await import('audio-channel-queue');
+              const module = await import('audioq');
               return typeof module.queueAudio === 'function';
             } catch (e) {
               return false;
@@ -147,4 +147,4 @@ await playWithFallback('./sounds/welcome');
 
 ---
 
-Need help with a specific browser issue? Check our **[troubleshooting guide](../migration/troubleshooting)** or **[open an issue](https://github.com/tonycarpenter21/audio-channel-queue/issues)** with your browser details!
+Need help with a specific browser issue? Check our **[troubleshooting guide](../migration/troubleshooting)** or **[open an issue](https://github.com/tonycarpenter21/audioq/issues)** with your browser details!

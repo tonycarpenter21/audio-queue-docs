@@ -7,7 +7,7 @@ Understanding the channel-based architecture that enables simultaneous audio pla
 Audio channels are independent playback streams that allow you to organize and control different types of audio content separately. Think of channels as separate "audio tracks" that can play simultaneously without interfering with each other.
 
 ```typescript
-import { queueAudio, setChannelVolume } from 'audio-channel-queue';
+import { queueAudio, setChannelVolume } from 'audioq';
 
 // Channel 0: Background music (using default channel)
 await queueAudio('./music/ambient.mp3');
@@ -39,7 +39,7 @@ import {
   pauseChannel, 
   resumeChannel,
   getQueueSnapshot 
-} from 'audio-channel-queue';
+} from 'audioq';
 
 // Check what's playing on each channel
 const musicInfo = getCurrentAudioInfo();    // Background music (default channel 0)

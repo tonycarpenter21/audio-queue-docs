@@ -33,6 +33,14 @@ onAudioError(0, (error) => console.warn(error.errorType, error.src, error.error.
 - `Timeout`: the file did not start within `loadTimeoutMs` (15 s). Raise it for slow networks or
   large files: `setQueueConfig({ loadTimeoutMs: 30000 })`.
 
+## Sprites or `startAt` play from the beginning
+
+Seeking needs the server to support HTTP Range requests. Most servers and CDNs do (GitHub Pages,
+Netlify, Vercel, S3, nginx, Vite and webpack dev servers), but some simple ones do not, for
+example `python -m http.server`. AudioQ retries the seek when playback starts and logs a warning
+(`did not start at ... ms`), but the first moment may still be wrong. Serve the files from a
+server with Range support.
+
 ## Volume, fades or ducking do nothing on iPhone
 
 iOS ignores the audio element's volume, so AudioQ uses the Web Audio API there. That only works

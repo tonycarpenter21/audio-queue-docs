@@ -1,5 +1,5 @@
 ---
-sidebar_position: 14
+sidebar_position: 15
 title: Types
 description: The TypeScript types AudioQ exports
 ---
@@ -33,6 +33,8 @@ import type { AudioInfo, AudioQueueOptions, QueuedAudio, QueueSnapshot } from 'a
 | `FadeConfig`                          | A fade preset.                                               |
 | `WebAudioSupport`                     | Result of `getWebAudioSupport`.                              |
 | `MediaSessionOptions`                 | Options for `connectMediaSession`.                           |
+| `PreloadResult`                       | One result of `preloadAudio` ([Preloading](preloading)).     |
+| `ChannelStore`, `ChannelState`, `ChannelStateListener` | `createChannelStore` ([React](../getting-started/react-integration)). |
 | `AudioSprite`, `SpriteMap`, `SpriteSegment` | Sprites.                                               |
 | `AudioQueue`                          | The class `createAudioQueue` returns.                        |
 

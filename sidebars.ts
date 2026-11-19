@@ -51,6 +51,7 @@ const sidebars: SidebarsConfig = {
         'api-reference/audio-information',
         'api-reference/error-handling',
         'api-reference/media-session',
+        'api-reference/preloading',
         'api-reference/configuration',
         'api-reference/utilities',
         'api-reference/types-interfaces'

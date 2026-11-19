@@ -1,5 +1,5 @@
 ---
-sidebar_position: 12
+sidebar_position: 13
 title: Configuration and Queues
 description: Queue configuration, independent queues, and iOS / Web Audio
 ---

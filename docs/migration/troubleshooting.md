@@ -39,7 +39,8 @@ Seeking needs the server to support HTTP Range requests. Most servers and CDNs d
 Netlify, Vercel, S3, nginx, Vite and webpack dev servers), but some simple ones do not, for
 example `python -m http.server`. AudioQ retries the seek when playback starts and logs a warning
 (`did not start at ... ms`), but the first moment may still be wrong. Serve the files from a
-server with Range support.
+server with Range support, or [preload](../api-reference/preloading) them: preloaded files play
+from memory and always seek.
 
 ## Volume, fades or ducking do nothing on iPhone
 

@@ -1,5 +1,5 @@
 ---
-sidebar_position: 13
+sidebar_position: 14
 title: Utilities and Constants
 description: Small helpers and constants exported by AudioQ
 ---

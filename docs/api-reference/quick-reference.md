@@ -88,6 +88,8 @@ unsubscribe function), and the matching `off*` functions `(channel?, callback?)`
 | `defineSprite(src, map, queue?)`           | Named segments of one file                |
 | `parseWebVtt(text)` / `parseVttTimestamp(t)` | Captions to cues                        |
 | `connectMediaSession(options?)`            | Lock-screen and media-key controls        |
+| `preloadAudio(urls, queue?)` / `isAudioPreloaded(url)` / `releasePreloadedAudio(urls?)` | Keep files in memory ([Preloading](preloading)) |
+| `createChannelStore(channel?, queue?)`     | Channel state for React, Svelte, Vue      |
 | `extractFileName(url)`                     | Readable file name from a URL             |
 | `getFadeConfig(fadeType)`                  | A fade preset's settings                  |
 | `isIOSDevice()` / `isWebAudioSupported()`  | Platform checks                           |

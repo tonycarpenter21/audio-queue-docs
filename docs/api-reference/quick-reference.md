@@ -64,6 +64,7 @@ arguments default to 0 where shown with `?`.
 | `setMuted(muted)` / `isMuted()`                        | Mute everything              |
 | `setChannelMuted(channel, muted)` / `isChannelMuted(channel?)` | Mute one channel     |
 | `setChannelPan(channel, pan)` / `getChannelPan(channel?)` | Stereo position (-1 to 1) |
+| `getChannelAnalyser(channel)`                          | AnalyserNode for visualizers |
 | `setVolumeDucking(config)` / `clearVolumeDucking()`    | Duck under a priority channel |
 
 ## Events

@@ -19,6 +19,7 @@ console.log(getQueueConfig().prefetchCount);
 
 | Option                | Default   | Description                                                         |
 | --------------------- | --------- | ------------------------------------------------------------------- |
+| `debug`               | `false`   | Log every event (except progress) through `logger.debug`.           |
 | `defaultMaxQueueSize` | unlimited | Items per channel, including the current one.                       |
 | `dropOldestWhenFull`  | `false`   | Drop the oldest waiting item instead of rejecting a new one.        |
 | `historySize`         | `20`      | Finished items kept per channel for `getHistory` (0 turns it off).  |
@@ -31,6 +32,22 @@ console.log(getQueueConfig().prefetchCount);
 | `webAudio`            | `'auto'`  | When to use Web Audio: `'auto'`, `'force'` or `'off'`.              |
 
 Invalid values throw a `RangeError` (for example a negative `prefetchCount`).
+
+## Debugging
+
+```ts
+setQueueConfig({ debug: true });
+```
+
+Every event except progress is logged through `logger.debug` (`console.debug` by default) with its
+channel and payload, so you can see what happened to a sound: queued, blocked by autoplay,
+failed and why, started, paused, cue entered, completed with its reason.
+
+```ts
+// audioq [channel 0] queuechange { channelNumber: 0, items: [...], totalItems: 1, ... }
+// audioq [channel 0] error { errorType: 'autoplay-blocked', fileName: 'click.mp3', ... }
+// audioq [channel 0] start { fileName: 'click.mp3', duration: 300, ... }
+```
 
 ## Independent queues
 

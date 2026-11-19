@@ -105,6 +105,34 @@ Panning routes the channel through the Web Audio API, so it works for same-origi
 audio plays centered and a warning is logged. It is ignored when `webAudio` is `'off'` and in
 browsers without `StereoPannerNode` (Safari before 14.1).
 
+## Visualizers and level meters
+
+```ts signature
+getChannelAnalyser(channelNumber: number): AnalyserNode | undefined
+```
+
+Returns the browser's own [`AnalyserNode`](https://developer.mozilla.org/docs/Web/API/AnalyserNode)
+for a channel, measuring what it plays after volume, fades and panning (crossfades included).
+Each channel has one; repeated calls return the same node. Tune it with `fftSize` and
+`smoothingTimeConstant`.
+
+```ts
+const analyser = getChannelAnalyser(0);
+if (analyser) {
+  analyser.fftSize = 64; // 32 frequency bands
+  const bands = new Uint8Array(analyser.frequencyBinCount);
+  const draw = (): void => {
+    analyser.getByteFrequencyData(bands); // 0-255 per band: draw bars from it
+    requestAnimationFrame(draw);
+  };
+  draw();
+}
+```
+
+Like panning, it routes the channel through the Web Audio API, so it measures same-origin,
+[preloaded](preloading) or CORS audio (others play but read as silence). It returns `undefined`
+when `webAudio` is `'off'` or the browser has no Web Audio.
+
 ## iOS
 
 iOS ignores the audio element's volume. AudioQ routes same-origin audio through the Web Audio API

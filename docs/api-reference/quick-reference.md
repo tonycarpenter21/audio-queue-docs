@@ -63,6 +63,7 @@ arguments default to 0 where shown with `?`.
 | `setGlobalVolume(volume)` / `getGlobalVolume()`        | Master volume                |
 | `setMuted(muted)` / `isMuted()`                        | Mute everything              |
 | `setChannelMuted(channel, muted)` / `isChannelMuted(channel?)` | Mute one channel     |
+| `setChannelPan(channel, pan)` / `getChannelPan(channel?)` | Stereo position (-1 to 1) |
 | `setVolumeDucking(config)` / `clearVolumeDucking()`    | Duck under a priority channel |
 
 ## Events

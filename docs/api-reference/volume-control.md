@@ -84,6 +84,27 @@ console.log(isChannelMuted(0), getChannelVolume(0)); // true, and the volume is 
 
 `getCurrentAudioInfo().volume` reports 0 while muted. `destroyAllChannels()` unmutes.
 
+## Stereo panning
+
+```ts signature
+setChannelPan(channelNumber: number, pan: number): void
+getChannelPan(channelNumber?: number): number
+```
+
+Places a channel from -1 (left) through 0 (center) to 1 (right), for example footsteps or a
+character speaking from one side. Values outside are clamped; `NaN` throws a `RangeError`.
+
+```ts
+setChannelPan(1, -0.8);
+await queueAudio('/sfx/footsteps.mp3', 1);
+setChannelPan(1, 0.8); // moves while playing
+```
+
+Panning routes the channel through the Web Audio API, so it works for same-origin audio,
+[preloaded](preloading) files, and CORS audio queued with `crossOrigin: 'anonymous'`. Other
+audio plays centered and a warning is logged. It is ignored when `webAudio` is `'off'` and in
+browsers without `StereoPannerNode` (Safari before 14.1).
+
 ## iOS
 
 iOS ignores the audio element's volume. AudioQ routes same-origin audio through the Web Audio API

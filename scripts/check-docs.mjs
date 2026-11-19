@@ -138,9 +138,21 @@ const checkSidebar = () => {
   return problems;
 };
 
+/** Compiler options tsconfig.json must keep (npm run typecheck covers the site's own code). */
+const checkStrictness = () => {
+  const text = readFileSync(join(root, 'tsconfig.json'), 'utf8').replace(/^\s*\/\/.*$/gm, '');
+  const options = JSON.parse(text).compilerOptions ?? {};
+  const on = ['strict', 'noUncheckedIndexedAccess', 'exactOptionalPropertyTypes', 'noImplicitReturns', 'noPropertyAccessFromIndexSignature', 'noUnusedLocals', 'noUnusedParameters'];
+  const off = ['allowUnreachableCode', 'allowUnusedLabels'];
+  return [
+    ...on.filter((flag) => options[flag] !== true).map((flag) => `tsconfig.json: "${flag}" must be true`),
+    ...off.filter((flag) => options[flag] !== false).map((flag) => `tsconfig.json: "${flag}" must be false`)
+  ];
+};
+
 const examples = checkExamples();
 const sidebarProblems = checkSidebar();
-const problems = [...examples.problems, ...sidebarProblems];
+const problems = [...examples.problems, ...sidebarProblems, ...checkStrictness()];
 problems.forEach((problem) => console.log(problem));
 console.log(
   `${examples.count} examples type-checked, ${markdownFiles(docsDir).length} pages checked against the sidebar: ` +

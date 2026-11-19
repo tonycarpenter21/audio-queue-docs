@@ -17,7 +17,7 @@ function HomepageHeader(): React.JSX.Element {
           🔊 {siteConfig.title}
         </Heading>
         <p className="hero__subtitle">{siteConfig.tagline}</p>
-        <div className={styles.buttons}>
+        <div className={styles['buttons']}>
           <Link
             className="button button--secondary button--lg"
             to="/getting-started/installation">

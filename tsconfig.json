@@ -1,8 +1,19 @@
 {
-  // This file is not used in compilation. It is here just for a nice editor experience.
+  // Used by `npm run typecheck` (Docusaurus itself compiles with Babel).
   "extends": "@docusaurus/tsconfig",
   "compilerOptions": {
-    "baseUrl": "."
+    "baseUrl": ".",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false
   },
-  "exclude": [".docusaurus", "build"]
+  "exclude": [".docusaurus", "build", "scripts", ".check"]
 }

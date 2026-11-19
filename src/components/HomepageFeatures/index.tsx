@@ -13,34 +13,32 @@ const FeatureList: FeatureItem[] = [
   {
     description: (
       <>
-        Manage multiple independent audio queues simultaneously. Perfect for games, 
-        applications, and complex audio experiences with separate channels for music, 
-        sound effects, and voice.
+        Independent queues for music, sound effects and voice. Queue a file and it plays; the rest
+        waits its turn. Volume ducking, fades and crossfades keep the mix clean.
       </>
     ),
     emoji: '🎛️',
-    title: 'Multi-Channel Audio'
+    title: 'Multi-Channel Queues'
   },
   {
     description: (
       <>
-        Full playback control with pause, resume, volume adjustment, and priority 
-        queueing. Includes smooth fade transitions and volume ducking for 
-        professional audio experiences.
+        Repeat, shuffle, seek, speed, history and lock-screen controls for players. Sprites, timed
+        cues and WebVTT captions for games and voice-overs.
       </>
     ),
     emoji: '⏯️',
-    title: 'Real-Time Control'
+    title: 'Players, Games and Voice'
   },
   {
     description: (
       <>
-        Built with TypeScript and zero dependencies. Comprehensive type definitions, 
-        extensive documentation, and a clean API make integration simple and reliable.
+        Zero dependencies, about 11 KB gzipped, tree-shakable and safe to import on the server.
+        Handles autoplay blocking, iOS volume and interruptions for you.
       </>
     ),
     emoji: '📘',
-    title: 'TypeScript Ready'
+    title: 'Small and Typed'
   }
 ];
 

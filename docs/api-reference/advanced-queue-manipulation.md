@@ -1,355 +1,100 @@
-# Advanced Queue Manipulation
+---
+sidebar_position: 2
+title: Rearranging the Queue
+description: Remove, reorder, swap, shuffle and inspect queued items
+---
 
-Advanced queue manipulation functions for precise control over audio playback order and queue management. All functions support channel 0 fallback for convenience.
+# Rearranging the Queue
 
-## Overview
+Index 0 is the current item and cannot be moved or removed (stop it instead). Waiting items start
+at index 1. These functions return a `QueueManipulationResult` and never throw:
 
-The advanced queue manipulation API provides granular control over audio queues beyond basic queueing and playback. These functions allow you to:
-
-- Remove specific items from queues
-- Reorder queue items
-- Swap positions of queue items
-- Clear queues while preserving currently playing audio
-- Get detailed information about queue items
-- Query queue lengths
-
-**Important Note**: All queue indices are 0-based. The currently playing audio is always at index 0 and cannot be manipulated with these functions. Queue manipulation operations can only be performed on indices 1 and higher (the queued items that are not currently playing).
-
-## QueueManipulationResult Interface
-
-All queue manipulation functions return a standardized result object:
-
-```typescript
+```ts
 interface QueueManipulationResult {
-  success: boolean;             // Whether the operation was successful
-  error?: string;               // Error message if operation failed
-  updatedQueue?: QueueSnapshot; // The queue snapshot after the operation (if successful)
+  error?: string;
+  success: boolean;
+  updatedQueue?: QueueSnapshot;
 }
 ```
 
-## Remove Queued Item
+## removeQueuedItem
 
-Remove a specific item from the queue by its position. Since index 0 contains the currently playing audio, you can only remove items at indices 1 and higher.
-
-### Syntax
-
-```typescript
-removeQueuedItem(queuedSlotNumber: number, channelNumber: number = 0): QueueManipulationResult
+```ts signature
+removeQueuedItem(queuedSlotNumber: number, channelNumber?: number): Promise<QueueManipulationResult>
 ```
 
-### Parameters
-
-- `queuedSlotNumber` (number): The position of the item to remove (0-based index, must be ≥ 1 since index 0 is currently playing)
-- `channelNumber` (number, optional): The channel number (defaults to 0)
-
-### Examples
-
-```typescript
-import { removeQueuedItem, queueAudio } from 'audioq';
-
-// Setup a queue first
-await queueAudio('/audio/track1.mp3'); // Index 0 (playing)
-await queueAudio('/audio/track2.mp3'); // Index 1
-await queueAudio('/audio/track3.mp3'); // Index 2
-await queueAudio('/audio/track4.mp3'); // Index 3
-
-// Remove item at index 2 from default channel (0)
-const result = removeQueuedItem(2); // Uses channel 0 fallback
-
-if (result.success) {
-  console.log('Successfully removed item from queue');
-  console.log(`Queue now has ${result.updatedQueue.totalItems} items`);
-} else {
-  console.error('Failed to remove item:', result.error);
-}
-
-// Remove item from a specific channel
-const channel1Result = removeQueuedItem(1, 1); // Remove index 1 from channel 1
+```ts
+const result = await removeQueuedItem(2);
+if (!result.success) console.warn(result.error);
 ```
 
-## Reorder Queue Items
+The removed item's `finished` settles with `'removed'`.
 
-Move a queue item from one position to another. Since index 0 contains the currently playing audio, you can only reorder items at indices 1 and higher.
+## reorderQueue
 
-### Syntax
-
-```typescript
-reorderQueue(currentQueuedSlotNumber: number, newQueuedSlotNumber: number, channelNumber: number = 0): QueueManipulationResult
+```ts signature
+reorderQueue(currentQueuedSlotNumber: number, newQueuedSlotNumber: number, channelNumber?: number): Promise<QueueManipulationResult>
 ```
 
-### Parameters
-
-- `currentQueuedSlotNumber` (number): Current position of the item (0-based index, must be ≥ 1 since index 0 is currently playing)
-- `newQueuedSlotNumber` (number): New position for the item (0-based index, must be ≥ 1 since index 0 is reserved for currently playing)
-- `channelNumber` (number, optional): The channel number (defaults to 0)
-
-### Examples
-
-```typescript
-import { reorderQueue, queueAudio, getQueueSnapshot } from 'audioq';
-
-// Setup a queue
-await queueAudio('/audio/intro.mp3');    // Index 0 (playing)
-await queueAudio('/audio/song1.mp3');    // Index 1
-await queueAudio('/audio/song2.mp3');    // Index 2
-await queueAudio('/audio/song3.mp3');    // Index 3
-await queueAudio('/audio/outro.mp3');    // Index 4
-
-// Move item from index 3 to index 1 in default channel (0)
-const result = reorderQueue(3, 1); // Uses channel 0 fallback
-
-if (result.success) {
-  console.log('Successfully reordered queue');
-  console.log('New queue order:');
-  result.updatedQueue.items.forEach((item, index) => {
-    const status = item.isCurrentlyPlaying ? '🔊 Playing' : `${index}. Queued`;
-    console.log(`${status}: ${item.fileName}`);
-  });
-} else {
-  console.error('Failed to reorder:', result.error);
-}
-
-// Reorder in a specific channel
-const channel2Result = reorderQueue(2, 4, 2); // Move index 2 to 4 in channel 2
+```ts
+await reorderQueue(4, 1); // make item 4 play next
 ```
 
-## Clear Queue After Current
+## swapQueueItems
 
-Remove all items from the queue except the currently playing audio.
-
-### Syntax
-
-```typescript
-clearQueueAfterCurrent(channelNumber: number = 0): QueueManipulationResult
+```ts signature
+swapQueueItems(slotA: number, slotB: number, channelNumber?: number): Promise<QueueManipulationResult>
 ```
 
-### Parameters
-
-- `channelNumber` (number, optional): The channel number (defaults to 0)
-
-### Examples
-
-```typescript
-import { clearQueueAfterCurrent, queueAudio } from 'audioq';
-
-// Setup a queue with multiple items
-await queueAudio('/audio/current.mp3');   // Index 0 (playing)
-await queueAudio('/audio/next1.mp3');     // Index 1
-await queueAudio('/audio/next2.mp3');     // Index 2
-await queueAudio('/audio/next3.mp3');     // Index 3
-
-// Clear all queued items after the current one in default channel (0)
-const result = clearQueueAfterCurrent(); // Uses channel 0 fallback
-
-if (result.success) {
-  console.log('Successfully cleared queue after current');
-  console.log(`Queue now has ${result.updatedQueue.totalItems} item(s)`);
-  // Should show 1 item (the currently playing audio)
-} else {
-  console.error('Failed to clear queue:', result.error);
-}
-
-// Clear queue in a specific channel
-const channel3Result = clearQueueAfterCurrent(3);
+```ts
+await swapQueueItems(1, 3);
 ```
 
-## Swap Queue Items
+## shuffleQueue
 
-Swap the positions of two items in the queue. Since index 0 contains the currently playing audio, you can only swap items at indices 1 and higher.
-
-### Syntax
-
-```typescript
-swapQueueItems(slotA: number, slotB: number, channelNumber: number = 0): QueueManipulationResult
+```ts signature
+shuffleQueue(channelNumber?: number, random?: () => number): Promise<QueueManipulationResult>
 ```
 
-### Parameters
+Shuffles the waiting items; the current item keeps playing. Pass your own random function for a
+reproducible order (for example a seeded generator in tests).
 
-- `slotA` (number): Position of the first item (0-based index, must be ≥ 1 since index 0 is currently playing)
-- `slotB` (number): Position of the second item (0-based index, must be ≥ 1 since index 0 is currently playing)
-- `channelNumber` (number, optional): The channel number (defaults to 0)
-
-### Examples
-
-```typescript
-import { swapQueueItems, queueAudio } from 'audioq';
-
-// Setup a queue
-await queueAudio('/audio/playing.mp3');  // Index 0 (playing)
-await queueAudio('/audio/first.mp3');    // Index 1
-await queueAudio('/audio/second.mp3');   // Index 2
-await queueAudio('/audio/third.mp3');    // Index 3
-
-// Swap items at index 1 and 3 in default channel (0)
-const result = swapQueueItems(1, 3); // Uses channel 0 fallback
-
-if (result.success) {
-  console.log('Successfully swapped queue items');
-  console.log('Updated queue order:');
-  result.updatedQueue.items.forEach((item, index) => {
-    const status = item.isCurrentlyPlaying ? '🔊 Playing' : `${index}. Queued`;
-    console.log(`${status}: ${item.fileName}`);
-  });
-} else {
-  console.error('Failed to swap items:', result.error);
-}
-
-// Swap items in a specific channel
-const channel1Result = swapQueueItems(2, 4, 1); // Swap index 2 and 4 in channel 1
+```ts
+await shuffleQueue(0);
 ```
 
-## Get Queue Item Info
+## clearQueueAfterCurrent
 
-Get detailed information about a specific item in the queue.
-
-### Syntax
-
-```typescript
-getQueueItemInfo(queueSlotNumber: number, channelNumber: number = 0): QueueItem | null
+```ts signature
+clearQueueAfterCurrent(channelNumber?: number): Promise<QueueManipulationResult>
 ```
 
-### Parameters
+Lets the current item finish and drops everything after it.
 
-- `queueSlotNumber` (number): The position of the item to query (0-based index)
-- `channelNumber` (number, optional): The channel number (defaults to 0)
+## Reading the queue
 
-### Returns
-
-- `QueueItem | null`: Information about the queue item, or `null` if not found
-
-### QueueItem Properties
-
-```typescript
-interface QueueItem {
-  duration: number;            // Total audio duration in milliseconds
-  fileName: string;            // Extracted filename from the source URL
-  isCurrentlyPlaying: boolean; // Whether this item is currently playing
-  isLooping: boolean;          // Whether this item is set to loop
-  src: string;                 // Audio file source URL
-  volume: number;              // Volume level for this item (0-1)
-}
+```ts signature
+getQueueLength(channelNumber?: number): number
+getQueueItemInfo(queueSlotNumber: number, channelNumber?: number): QueueItem | null
+getQueueSnapshot(channelNumber?: number): QueueSnapshot | null
 ```
 
-### Examples
-
-```typescript
-import { getQueueItemInfo, queueAudio } from 'audioq';
-
-// Setup a queue
-await queueAudio('/audio/track1.mp3'); // Index 0
-await queueAudio('/audio/track2.mp3'); // Index 1
-await queueAudio('/audio/track3.mp3'); // Index 2
-
-// Get info for item at index 1 in default channel (0)
-const itemInfo = getQueueItemInfo(1); // Uses channel 0 fallback
-
-if (itemInfo) {
-  console.log('Queue item information:');
-  console.log(`- File: ${itemInfo.fileName}`);
-  console.log(`- Duration: ${Math.round(itemInfo.duration / 1000)} seconds`);
-  console.log(`- Volume: ${itemInfo.volume}`);
-  console.log(`- Currently playing: ${itemInfo.isCurrentlyPlaying}`);
-  console.log(`- Looping: ${itemInfo.isLooping}`);
-  console.log(`- Source: ${itemInfo.src}`);
-} else {
-  console.log('No item found at that position');
-}
-
-// Get info from a specific channel
-const channel2Info = getQueueItemInfo(2, 2); // Get index 2 from channel 2
+```ts
+console.log(getQueueLength(0));
+const next = getQueueItemInfo(1, 0);
+console.log(next?.fileName, next?.metadata?.title, next?.duration);
+const snapshot = getQueueSnapshot(0); // null for a channel never used
+console.log(snapshot?.items.map((item) => item.id), snapshot?.isPaused);
 ```
 
-## Get Queue Length
+`QueueItem.duration` is 0 until the file's metadata has loaded (only the current and next items
+are preloaded).
 
-Get the total number of items in a channel's queue.
+## Reacting to changes
 
-### Syntax
-
-```typescript
-getQueueLength(channelNumber: number = 0): number
-```
-
-### Parameters
-
-- `channelNumber` (number, optional): The channel number (defaults to 0)
-
-### Returns
-
-- `number`: The total number of items in the queue
-
-### Examples
-
-```typescript
-import { getQueueLength, queueAudio } from 'audioq';
-
-// Setup a queue
-await queueAudio('/audio/track1.mp3');
-await queueAudio('/audio/track2.mp3');
-await queueAudio('/audio/track3.mp3');
-
-// Get queue length for default channel (0)
-const length = getQueueLength(); // Uses channel 0 fallback
-console.log(`Queue has ${length} items`);
-
-// Get queue length for specific channels
-const channel1Length = getQueueLength(1);
-const channel2Length = getQueueLength(2);
-console.log(`Channel 1: ${channel1Length} items`);
-console.log(`Channel 2: ${channel2Length} items`);
-```
-
-## Best Practices
-
-### Error Handling
-
-Always check the `success` property of returned results:
-
-```typescript
-const result = removeQueuedItem(2);
-if (result.success) {
-  // Operation succeeded, use result.updatedQueue
-  console.log('Operation successful');
-} else {
-  // Operation failed, check result.error
-  console.error('Operation failed:', result.error);
-}
-```
-
-### Channel Management
-
-Use the channel 0 fallback for default operations, explicit channels for multi-channel scenarios:
-
-```typescript
-// For default channel operations
-const defaultResult = removeQueuedItem(1);        // Uses channel 0 fallback
-const defaultLength = getQueueLength();           // Uses channel 0 fallback
-
-// For multi-channel scenarios
-const channels = [1, 2, 3];
-channels.forEach(channel => {
-  const length = getQueueLength();                // Uses channel 0 fallback
-  console.log(`Channel ${channel}: ${length} items`);
+```ts
+const off = onQueueChange(0, (snapshot) => {
+  console.log(`${snapshot.totalItems} items, current index ${snapshot.currentIndex}`);
 });
+off();
 ```
-
-### Index Validation
-
-Remember that queue manipulation cannot affect the currently playing item at index 0. You can only manipulate queued items at indices 1 and higher:
-
-```typescript
-// ❌ Invalid - cannot manipulate currently playing item at index 0
-removeQueuedItem(0);        // Will fail - can't remove currently playing
-reorderQueue(0, 2);         // Will fail - can't move currently playing
-swapQueueItems(0, 1);       // Will fail - can't swap with currently playing
-
-// ✅ Valid - manipulating queued items only (indices 1+)
-removeQueuedItem(1);        // OK - removes second item in queue
-reorderQueue(1, 3);         // OK - moves second item to fourth position
-swapQueueItems(1, 2);       // OK - swaps second and third items
-```
-
-## Related Functions
-
-- **[Queue Management](../api-reference/queue-management.md)** - Basic queue operations
-- **[Audio Information](../api-reference/audio-information.md)** - Getting queue snapshots and audio info
-- **[Event Listeners](../api-reference/event-listeners.md)** - Monitoring queue changes 

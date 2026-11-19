@@ -1,355 +1,75 @@
+---
+sidebar_position: 1
+title: Audio Channels
+description: How channels let sounds play side by side
+---
+
 # Audio Channels
 
-Understanding the channel-based architecture that enables simultaneous audio playback and management.
+A **channel** is an independent lane of audio. Each channel has its own:
 
-## What Are Audio Channels?
+- queue (items play one after another),
+- volume, playback speed, repeat mode, gap and crossfade settings,
+- pause state,
+- event listeners,
+- history.
 
-Audio channels are independent playback streams that allow you to organize and control different types of audio content separately. Think of channels as separate "audio tracks" that can play simultaneously without interfering with each other.
+Sounds on **different channels play at the same time**; sounds on the **same channel take turns**.
+Channels are numbered from 0 to 63 (`MAX_CHANNELS` is 64; change it with the `maxChannels`
+option). Channel 0 is the default for every function that takes a channel.
 
-```typescript
-import { queueAudio, setChannelVolume } from 'audioq';
+```ts
+const MUSIC = 0;
+const EFFECTS = 1;
+const VOICE = 2;
 
-// Channel 0: Background music (using default channel)
-await queueAudio('./music/ambient.mp3');
-setChannelVolume(0, 0.3);
-
-// Channel 1: Sound effects
-await queueAudio('./sfx/explosion.wav', 1);
-setChannelVolume(1, 0.8);
-
-// Channel 2: Voice/dialog
-await queueAudio('./voice/character1.mp3', 2);
-setChannelVolume(2, 1.0);
+await queueAudio('/music/theme.mp3', MUSIC, { loop: true });
+await queueAudio('/sfx/door.mp3', EFFECTS);
+await queueAudio('/voice/welcome.mp3', VOICE);
 ```
 
-## Channel Architecture
+Channels are created the first time you use them and cost nothing while idle. Invalid channel
+numbers (negative, fractional, `NaN`, or `maxChannels` and above) throw a `RangeError`.
 
-### Independent Operation
+## Choosing channels
 
-Each channel operates completely independently:
+| Kind of sound                        | Suggested setup                                                 |
+| ------------------------------------ | --------------------------------------------------------------- |
+| Background music                     | Its own channel, `loop: true` or `setRepeatMode(n, 'all')`      |
+| Voice, narration, text-to-speech     | Its own channel; make it the ducking priority channel            |
+| UI and notification sounds           | Its own channel with `dedupeMs`                                 |
+| Overlapping effects (gunfire, steps) | Two or three channels you rotate through, or `interrupt: true`  |
 
-- **Separate Queues**: Each channel maintains its own audio queue
-- **Independent Volume**: Volume controls affect only the specific channel
-- **Isolated Playback**: Pause/resume operations work per channel
-- **Event Isolation**: Events are fired per channel
+## Channel settings
 
-```typescript
-import { 
-  getCurrentAudioInfo, 
-  pauseChannel, 
-  resumeChannel,
-  getQueueSnapshot 
-} from 'audioq';
-
-// Check what's playing on each channel
-const musicInfo = getCurrentAudioInfo();    // Background music (default channel 0)
-const sfxInfo = getCurrentAudioInfo(1);      // Sound effects
-const voiceInfo = getCurrentAudioInfo(2);    // Dialog
-
-// Pause only the music channel
-pauseChannel(0);
-
-// Voice and SFX continue playing normally
-console.log('Music paused, but voice and SFX still playing');
-
-// Each channel has its own queue
-const musicQueue = getQueueSnapshot();   // Default channel 0
-const sfxQueue = getQueueSnapshot(1);
-const voiceQueue = getQueueSnapshot(2);
+```ts
+await setChannelVolume(0, 0.5);
+setPlaybackRate(2, 1.25);
+setRepeatMode(0, 'all');
+setChannelGap(2, 500);
+setCrossfade(0, 3000);
+setChannelQueueLimit(1, 5);
+console.log(getChannelVolume(0), getPlaybackRate(2), getRepeatMode(0), getChannelGap(2));
 ```
 
-### Channel Numbering
+## Cleaning up
 
-Channels are identified by zero-based integers:
-
-```typescript
-// Valid channel numbers
-const channels = {
-  MUSIC: 0,
-  SFX: 1,
-  VOICE: 2,
-  AMBIENT: 3,
-  UI_SOUNDS: 4
-  // ... any number you need
-};
-
-// Use descriptive constants for better code organization
-await queueAudio('./music/battle.mp3', channels.MUSIC);
-await queueAudio('./voice/warning.mp3', channels.VOICE);
+```ts
+await stopAllAudioInChannel(1); // stop and clear, keep settings and listeners
+await destroyChannel(1); // also forget its settings and listeners
+await destroyAllChannels(); // reset everything, including global volume and ducking
 ```
 
-## Common Channel Patterns
+All three take effect immediately, even without `await`.
 
-### Gaming Applications
+## Several independent queues
 
-Typical channel organization for games:
+The top-level functions all use one shared default queue. `createAudioQueue()` makes another with
+its own channels and configuration, for embedded widgets, multiple players, or tests:
 
-```typescript
-const GameChannels = {
-  MUSIC: 0,           // Background music
-  SFX: 1,             // Sound effects
-  VOICE: 2,           // Character dialog
-  AMBIENT: 3,         // Environmental sounds
-  UI: 4              // Menu/UI sounds
-} as const;
-
-// Setup game audio
-class GameAudioManager {
-  async initializeAudio(): Promise<void> {
-    // Background music - looped, lower volume (using default channel 0)
-    await queueAudio('./music/game-theme.mp3', GameChannels.MUSIC, {
-      loop: true,
-      volume: 0.4
-    });
-    
-    // Set channel volumes
-    setChannelVolume(GameChannels.SFX, 0.8);
-    setChannelVolume(GameChannels.VOICE, 1.0);
-    setChannelVolume(GameChannels.AMBIENT, 0.3);
-    setChannelVolume(GameChannels.UI, 0.6);
-  }
-  
-  async playExplosion(): Promise<void> {
-    // SFX don't loop, higher volume for impact
-    await queueAudio('./sfx/explosion.wav', GameChannels.SFX);
-  }
-  
-  async playDialog(audioFile: string): Promise<void> {
-    // Dialog interrupts other voice
-    // Priority playback places this right after the current playing sound in the queue
-    await queueAudioPriority('./voice/' + audioFile, GameChannels.VOICE);
-    // This stops the current playing sound so the new priority sound begins to play
-    await stopCurrentAudioInChannel();
-  }
-}
+```ts
+const ui = createAudioQueue({ defaultMaxQueueSize: 3, dropOldestWhenFull: true });
+const player = createAudioQueue({ historySize: 100, pauseWhenHidden: true });
+await ui.queueAudio('/sfx/click.mp3');
+await player.queueAudio('/music/track-1.mp3');
 ```
-
-### Interactive Applications
-
-Channel organization for interactive presentations or educational apps:
-
-```typescript
-const InteractiveChannels = {
-  BACKGROUND: 0,      // Ambient background audio
-  NARRATION: 1,       // Main narration/instruction
-  FEEDBACK: 2,        // User interaction feedback
-  ALERTS: 3          // Important alerts/warnings
-} as const;
-
-class InteractivePresentation {
-  async startLesson(): Promise<void> {
-    // Ambient background (using default channel 0)
-    await queueAudio('./audio/classroom-ambient.mp3', InteractiveChannels.BACKGROUND, {
-      loop: true,
-      volume: 0.2
-    });
-    
-    // Main narration
-    await queueAudio('./audio/lesson-intro.mp3', InteractiveChannels.NARRATION);
-  }
-  
-  async onUserClick(): Promise<void> {
-    // Quick feedback sound
-    await queueAudio('./audio/click-success.wav', InteractiveChannels.FEEDBACK, {
-      volume: 0.5
-    });
-  }
-  
-  async showAlert(alertType: 'warning' | 'error' | 'success'): Promise<void> {
-    // Alert interrupts narration but not background
-    await queueAudioPriority(`./audio/alert-${alertType}.mp3`, InteractiveChannels.ALERTS);
-  }
-}
-```
-
-## Channel Management Best Practices
-
-### Resource Management
-
-```typescript
-class ChannelManager {
-  private activeChannels: Set<number> = new Set();
-  
-  async activateChannel(channel: number): Promise<void> {
-    this.activeChannels.add(channel);
-    console.log(`Channel ${channel} activated`);
-  }
-  
-  async deactivateChannel(channel: number): Promise<void> {
-    // Stop all audio on channel
-    if (channel === 0) {
-      // Use default for channel 0
-      await stopCurrentAudioInChannel();
-    } else {
-      await stopCurrentAudioInChannel(channel);
-    }
-    
-    // Clear queue
-    const snapshot = channel === 0 ? getQueueSnapshot() : getQueueSnapshot(channel);
-    if (snapshot.totalItems > 0) {
-      console.log(`Clearing ${snapshot.totalItems} items from channel ${channel}`);
-    }
-    
-    this.activeChannels.delete(channel);
-  }
-  
-  getActiveChannels(): number[] {
-    return Array.from(this.activeChannels);
-  }
-  
-  async stopAllChannels(): Promise<void> {
-    for (const channel of this.activeChannels) {
-      await this.deactivateChannel(channel);
-    }
-  }
-}
-```
-
-### Volume Balancing
-
-```typescript
-class VolumeManager {
-  private channelVolumes: Map<number, number> = new Map();
-  
-  setBalancedVolumes(): void {
-    // Gaming balance example
-    this.setChannelVolume(0, 0.4);  // Music - subtle
-    this.setChannelVolume(1, 0.8);  // SFX - prominent
-    this.setChannelVolume(2, 1.0);  // Voice - full volume
-    this.setChannelVolume(3, 0.3);  // Ambient - background
-  }
-  
-  setChannelVolume(channel: number, volume: number): void {
-    const clampedVolume = Math.max(0, Math.min(1, volume));
-    setChannelVolume(channel, clampedVolume);
-    this.channelVolumes.set(channel, clampedVolume);
-  }
-  
-  duckChannels(exceptChannel: number, duckLevel: number = 0.3): void {
-    // Use the proper ducking API instead of manual channel volume adjustments
-    setVolumeDucking({
-      priorityChannel: exceptChannel,
-      priorityVolume: 1.0,
-      duckingVolume: duckLevel
-    });
-  }
-  
-  restoreChannelVolumes(): void {
-    // Restore original volumes
-    for (const [channel, volume] of this.channelVolumes) {
-      setChannelVolume(channel, volume);
-    }
-  }
-}
-```
-
-### Event Coordination
-
-```typescript
-class ChannelEventCoordinator {
-  setupCrossChannelEvents(): void {
-    // When voice starts, duck other audio
-    onAudioStart(2, (info) => {
-      console.log('Voice started - ducking other channels');
-      // Use the ducking API instead of individual channel adjustments
-      setVolumeDucking({
-        priorityChannel: 2,      // Voice channel
-        priorityVolume: 1.0,     // Voice at full volume
-        duckingVolume: 0.3       // Other channels at 30%
-      });
-    });
-    
-    // When voice ends, other channel volumes restore automatically
-    
-    // When music changes, log transition
-    onAudioStart(0, (info) => {
-      console.log(`Music changed to: ${info.fileName}`);
-    });
-    
-    // Monitor queue changes across channels
-    [0, 1, 2].forEach(channel => {
-      onQueueChange(channel, (snapshot) => {
-        if (snapshot.totalItems > 5) {
-          console.warn(`Channel ${channel} queue is getting long: ${snapshot.totalItems} items`);
-        }
-      });
-    });
-  }
-}
-```
-
-## Performance Considerations
-
-### Optimal Channel Count
-
-```typescript
-// Recommended limits for different scenarios
-const ChannelLimits = {
-  MOBILE: 4,      // Conservative for mobile devices
-  DESKTOP: 8,     // Good balance for desktop apps
-  POWERFUL: 16    // For high-end applications
-};
-
-class PerformanceAwareChannelManager {
-  private maxChannels: number;
-  
-  constructor(maxChannels: number = ChannelLimits.DESKTOP) {
-    this.maxChannels = maxChannels;
-  }
-  
-  canUseChannel(channel: number): boolean {
-    if (channel >= this.maxChannels) {
-      console.warn(`Channel ${channel} exceeds recommended limit of ${this.maxChannels}`);
-      return false;
-    }
-    return true;
-  }
-  
-  getRecommendedChannelCount(): number {
-    // Detect environment and return appropriate limit
-    const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    return isMobile ? ChannelLimits.MOBILE : ChannelLimits.DESKTOP;
-  }
-}
-```
-
-### Memory Management
-
-```typescript
-class ChannelMemoryManager {
-  async cleanupInactiveChannels(): Promise<void> {
-    for (let channel = 0; channel < 10; channel++) {
-      const snapshot = getQueueSnapshot(channel);
-      const audioInfo = getCurrentAudioInfo(channel);
-      
-      // Clean up channels with no activity
-      if (snapshot.totalItems === 0 && !audioInfo) {
-        console.log(`Cleaning up inactive channel ${channel}`);
-        // Channel cleanup is automatic, but good to track
-      }
-    }
-  }
-  
-  getChannelMemoryUsage(): { [channel: number]: { queueSize: number; isActive: boolean } } {
-    const usage: { [channel: number]: { queueSize: number; isActive: boolean } } = {};
-    
-    for (let channel = 0; channel < 10; channel++) {
-      const snapshot = getQueueSnapshot(channel);
-      usage[channel] = {
-        queueSize: snapshot.totalItems,
-        isActive: snapshot.totalItems > 0 && !snapshot.isPaused
-      };
-    }
-    
-    return usage;
-  }
-}
-```
-
-## Next Steps
-
-Now that you understand audio channels, explore:
-
-- **[Queue System](./queue-system.md)** - How queuing works within channels
-- **[Event System](./event-system.md)** - Managing events across channels  
-- **[Audio Lifecycle](./audio-lifecycle.md)** - Complete audio playback flow

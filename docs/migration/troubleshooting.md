@@ -1,63 +1,90 @@
 ---
+sidebar_position: 2
 title: Troubleshooting
-description: Common issues and solutions for AudioQ
-sidebar_position: 1
+description: Common problems and how to fix them
 ---
 
 # Troubleshooting
 
-Common issues and solutions when using AudioQ.
+## Nothing plays until I click
 
-## Audio Not Playing
+Browsers block sound until the user interacts with the page. AudioQ keeps what you queued and
+starts it on the first click, tap or key press, and reports one `AutoplayBlocked` error so you
+can show a hint. To start from your own button, call `unlockAudio()` in its handler.
 
-### Browser Autoplay Policies
-Modern browsers require user interaction before playing audio:
-
-```typescript
-// Wait for user interaction
-document.addEventListener('click', () => {
-  await queueAudio('sounds/music.mp3');
-}, { once: true });
+```ts
+onAudioError(0, (error) => {
+  if (error.errorType === AudioErrorType.AutoplayBlocked) console.log('Tap to enable sound');
+});
 ```
 
-### File Path Issues
-Ensure audio files are accessible:
+## A file is skipped
 
-```typescript
-// ✅ Correct - relative to public directory
-await queueAudio('sounds/music.mp3');
+Listen for errors to see why:
 
-// ❌ Incorrect - absolute paths usually don't work
-await queueAudio('/Users/myuser/sounds/music.mp3');
+```ts
+onAudioError(0, (error) => console.warn(error.errorType, error.src, error.error.message));
 ```
 
-## Performance Issues
+- `Network`: check the path in the browser's network tab. Paths are relative to the page, not to
+  your source file; with a bundler, import the file to get its final URL.
+- `Unsupported`: the browser cannot play the format (for example Ogg on older Safari). MP3 and
+  AAC/M4A play everywhere.
+- `Timeout`: the file did not start within `loadTimeoutMs` (15 s). Raise it for slow networks or
+  large files: `setQueueConfig({ loadTimeoutMs: 30000 })`.
 
-### Too Many Channels
-Limit the number of active channels:
+## Volume, fades or ducking do nothing on iPhone
 
-```typescript
-// ✅ Good - reasonable number of channels
-for (let i = 0; i < 4; i++) {
-  await queueAudio('sound.mp3', i);
-}
+iOS ignores the audio element's volume, so AudioQ uses the Web Audio API there. That only works
+for same-origin audio, or for audio served with CORS headers and queued with
+`crossOrigin: 'anonymous'`. Otherwise the file plays at full volume. `getWebAudioSupport()` tells
+you what is happening:
 
-// ❌ Avoid - too many channels can impact performance
-for (let i = 0; i < 100; i++) {
-  await queueAudio('sound.mp3', i);
-}
+```ts
+console.log(getWebAudioSupport().reason);
 ```
 
-## Browser Compatibility
+See [iOS and Web Audio](../api-reference/configuration#ios-and-web-audio).
 
-### Safari Issues
-Safari has stricter audio policies. Ensure user interaction before audio playback.
+## Audio stops when the phone locks or the tab is hidden
 
-### Mobile Browsers
-Some mobile browsers have additional restrictions on background audio.
+Mobile browsers may pause audio in the background, and calls or Siri interrupt it. AudioQ notices
+and reports the channel as paused (`onAudioPause` fires). Use
+[`connectMediaSession`](../api-reference/media-session) so users can resume from the lock screen.
+If you want the opposite (stop sound in background tabs), set `pauseWhenHidden: true`.
 
-## Need More Help?
+## My queue grows forever
 
-- **[GitHub Issues](https://github.com/tonycarpenter21/audioq/issues)** - Report bugs
-- **[Live Demo](https://tonycarpenter21.github.io/audio-queue-demo/)** - Test functionality
-- **[Browser Compatibility](../getting-started/browser-compatibility)** - Supported browsers 
+Set a limit, and drop the oldest waiting item instead of rejecting new ones if that suits you:
+
+```ts
+setQueueConfig({ defaultMaxQueueSize: 10, dropOldestWhenFull: true });
+setChannelQueueLimit(3, 2); // a per-channel limit
+```
+
+Rapid repeats of the same sound can be collapsed with `dedupeMs`, and a new sound can replace the
+current one with `interrupt: true`.
+
+## Sounds linger after a component unmounts
+
+Remove listeners and stop the channel in the cleanup. Both take effect immediately, so the cleanup
+does not need to be async.
+
+```ts
+const off = onAudioStart(0, (info) => console.log(info.fileName));
+// in the cleanup:
+off();
+void stopAllAudioInChannel(0);
+```
+
+See [React](../getting-started/react-integration) for complete hooks.
+
+## Errors on the server (Next.js, Remix, Astro)
+
+Importing AudioQ on the server is safe, but playing is not: call `queueAudio` from event handlers
+or effects that run in the browser.
+
+## Still stuck?
+
+Open an issue at [github.com/tonycarpenter21/audioq](https://github.com/tonycarpenter21/audioq/issues)
+with the browser, the device and a short example.

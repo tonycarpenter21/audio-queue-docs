@@ -1,150 +1,51 @@
 ---
-sidebar_position: 3
+sidebar_position: 5
 title: Browser Compatibility
-description: Browser support and compatibility information for AudioQ
+description: Supported browsers and platform notes
 ---
 
 # Browser Compatibility
 
-AudioQ is designed for **browser environments** and uses the Web Audio API (`HTMLAudioElement`). Here's everything you need to know about browser support.
+AudioQ supports browsers from 2020 onwards (it is compiled to ES2020):
 
-## Supported Browsers
+| Browser          | Minimum version |
+| ---------------- | --------------- |
+| Chrome, Edge     | 80              |
+| Firefox          | 74              |
+| Safari (macOS)   | 13.1            |
+| Safari (iOS)     | 13.4            |
+| Samsung Internet | 13              |
 
-### Desktop Browsers
+Node.js can import AudioQ (for server-side rendering) but cannot play audio; `queueAudio` explains
+this with an error if called on the server.
 
-| Browser | Minimum Version | Release Date | Support Level |
-|---------|----------------|--------------|---------------|
-| **Chrome** | 51+ | June 2016 | ✅ Full Support |
-| **Firefox** | 54+ | June 2017 | ✅ Full Support |
-| **Safari** | 10+ | September 2016 | ✅ Full Support |
-| **Edge** | 15+ | April 2017 | ✅ Full Support |
-| **Opera** | 38+ | June 2016 | ✅ Full Support |
+## Autoplay rules
 
-### 📱 Mobile Browsers
+Every modern browser blocks audio until the user has interacted with the page. AudioQ handles
+this for you:
 
-| Browser | Platform | Support Level | Notes |
-|---------|----------|---------------|-------|
-| **Chrome Mobile** | Android 7+ | ✅ Full Support | Excellent performance |
-| **Safari Mobile** | iOS 10+ | ✅ Full Support | Enhanced v1.13.0+ with Web Audio API fixes |
-| **Samsung Internet** | Android 7+ | ✅ Full Support | Based on Chromium |
-| **Firefox Mobile** | Android 7+ | ✅ Full Support | Good performance |
+- The blocked item stays queued and an `AutoplayBlocked` error is reported once.
+- Playback starts on the next click, tap or key press (the events that grant permission).
+- `unlockAudio()` does the same from your own handler.
 
-## ⚠️ Not Supported
+## iOS and iPadOS
 
-- ❌ **Internet Explorer** (lacks ES6 and modern audio APIs)
-- ❌ **Node.js** (server-side environments - no DOM/HTMLAudioElement)
-- ❌ **Web Workers** (no DOM access for audio elements)
-- ❌ **Very old mobile browsers** (Android < 7, iOS < 10)
+- **Volume:** iOS ignores `HTMLAudioElement.volume`. AudioQ routes same-origin audio through the
+  Web Audio API on iOS so volume, fades, ducking and crossfades work. Cross-origin files need
+  `crossOrigin: 'anonymous'` and CORS headers for this; without them they play at full volume
+  (never silently). See [iOS and Web Audio](../api-reference/configuration#ios-and-web-audio).
+- **Interruptions:** phone calls, Siri and Control Center pause audio. AudioQ notices, reports the
+  channel as paused, and fires `onAudioPause`; playing from the lock screen fires `onAudioResume`.
+- **Capacitor and Ionic apps** (`capacitor://` pages) get Web Audio volume control too.
 
-#### 🆕 iOS Web Audio API Improvements (v1.13.0+)
+## Android
 
-Version 1.13.0 includes enhanced iOS compatibility:
+- Chrome may delay loading media in background tabs. If items time out there, raise
+  `loadTimeoutMs` or use `pauseWhenHidden`.
+- Unplugging headphones pauses audio; AudioQ reports it like any other OS pause.
 
-- **✅ Fixed Volume Control Issues** - Volume changes and transitions now work properly on all iOS browsers
-- **✅ Improved Web Audio API Integration** - Better handling of iOS-specific audio constraints
-- **✅ Fallback Mechanisms** - Automatic fallbacks for browsers with limited Web Audio API support
-- **✅ Better Performance** - Optimized audio element management for iOS devices
+## Formats
 
-### Audio Format Fallbacks
-
-Provide multiple audio formats for maximum compatibility:
-
-```typescript
-import { queueAudio } from 'audioq';
-
-async function playWithFallback(baseName: string) {
-  const formats = ['.mp3', '.ogg', '.wav'];
-  
-  for (const format of formats) {
-    try {
-      await queueAudio(`${baseName}${format}`);
-      return; // Success - stop trying other formats
-    } catch (error) {
-      console.warn(`Failed to load ${baseName}${format}`);
-    }
-  }
-  
-  console.error(`Could not load ${baseName} in any format`);
-}
-
-// Usage
-await playWithFallback('./sounds/welcome');
-```
-
-## Testing Browser Support
-
-### Manual Testing Script
-
-```html
-<!DOCTYPE html>
-<html>
-<head>
-  <title>AudioQ Browser Test</title>
-</head>
-<body>
-  <h1>Browser Compatibility Test</h1>
-  <div id="results"></div>
-  
-  <script type="module">
-    const results = document.getElementById('results');
-    
-    async function runTests() {
-      const tests = [
-        {
-          name: 'HTMLAudioElement',
-          test: () => typeof Audio !== 'undefined'
-        },
-        {
-          name: 'Promises',
-          test: () => typeof Promise !== 'undefined'
-        },
-        {
-          name: 'ES6 Arrow Functions',
-          test: () => {
-            try {
-              new Function('const test = () => {};');
-              return true;
-            } catch (e) {
-              return false;
-            }
-          }
-        },
-        {
-          name: 'AudioQ Import',
-          test: async () => {
-            try {
-              const module = await import('audioq');
-              return typeof module.queueAudio === 'function';
-            } catch (e) {
-              return false;
-            }
-          }
-        }
-      ];
-      
-      for (const test of tests) {
-        try {
-          const result = await test.test();
-          results.innerHTML += `<p>✅ ${test.name}: ${result ? 'PASS' : 'FAIL'}</p>`;
-        } catch (error) {
-          results.innerHTML += `<p>❌ ${test.name}: ERROR - ${error.message}</p>`;
-        }
-      }
-    }
-    
-    runTests();
-  </script>
-</body>
-</html>
-```
-
-## Additional Resources
-
-- **[Can I Use - HTMLAudioElement](https://caniuse.com/audio)** - Audio element support
-- **[Can I Use - Promises](https://caniuse.com/promises)** - Promise support  
-- **[MDN - HTMLAudioElement](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAudioElement)** - Audio API documentation
-- **[Web Audio API Support](https://caniuse.com/audio-api)** - Advanced audio features
-
----
-
-Need help with a specific browser issue? Check our **[troubleshooting guide](../migration/troubleshooting)** or **[open an issue](https://github.com/tonycarpenter21/audioq/issues)** with your browser details!
+AudioQ plays whatever the browser's `<audio>` element plays. MP3 and AAC (M4A) work everywhere;
+Opus/WebM and Ogg Vorbis work everywhere except some older Safari versions; WAV works everywhere
+but is large.

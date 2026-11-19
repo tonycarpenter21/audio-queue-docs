@@ -1,261 +1,56 @@
 ---
 sidebar_position: 1
 title: Installation
-description: How to install and set up AudioQ in your project
+description: Install AudioQ and import it in any browser project
 ---
 
 # Installation
 
-## Install with npm
-
 ```bash
 npm install audioq
-```
-
-## Install with yarn
-
-```bash
+# or
 yarn add audioq
-```
-
-## Install with pnpm
-
-```bash
+# or
 pnpm add audioq
 ```
 
+AudioQ has **no runtime dependencies** and ships TypeScript types, so there is nothing else to
+install.
+
+## Importing
+
+The package ships both ES modules and CommonJS, and bundlers pick the right one automatically.
+It is marked side-effect free, so bundlers drop the parts you do not import.
+
+```ts
+import { queueAudio, createAudioQueue, FadeType } from 'audioq';
+```
+
+```bash
+# CommonJS (older tooling) works too:
+# const { queueAudio } = require('audioq');
+```
+
+Importing AudioQ never touches browser APIs, so it is safe in server-side rendering (Next.js,
+Nuxt, SvelteKit, Remix). Audio is only created when you call `queueAudio` in the browser.
+
+## Where to put audio files
+
+Any URL the browser can play works: files served by your app, a CDN, `blob:` URLs, `data:` URIs,
+or a `Blob`/`File` object.
+
+| Setup                           | Where files go        | URL to use                      |
+| ------------------------------- | --------------------- | ------------------------------- |
+| Vite, Create React App, Next.js | `public/sounds/x.mp3` | `/sounds/x.mp3`                 |
+| Bundler import                  | next to your code     | `import url from './x.mp3'`     |
+| CDN                             | anywhere              | `https://cdn.example.com/x.mp3` |
+| Generated or uploaded audio     | in memory             | pass the `Blob` itself          |
+
+If the audio lives on another domain and you need volume control on iOS, see
+[iOS and Web Audio](../api-reference/configuration#ios-and-web-audio).
+
 ## Requirements
 
-### Environment Requirements
-- **Browser environment** (not Node.js server-side)
-- **HTML5 audio support** (available in all modern browsers)
-
-### Development Requirements
-- **Node.js 14+** (for building and testing only)
-- **TypeScript 4.5+** (optional, but recommended)
-
-## Basic Setup
-
-### ES6 Modules (Recommended)
-
-```typescript
-import { 
-  queueAudio, 
-  setChannelVolume, 
-  pauseChannel,
-  onAudioStart 
-} from 'audioq';
-
-// Start using immediately!
-await queueAudio('./sounds/welcome.mp3');
-```
-
-### CommonJS
-
-```javascript
-const { 
-  queueAudio, 
-  setChannelVolume, 
-  pauseChannel 
-} = require('audioq');
-
-// Start using immediately!
-await queueAudio('./sounds/welcome.mp3');
-```
-
-### UMD (Browser Script Tag)
-
-```html
-<script src="node_modules/audioq/dist/index.umd.js"></script>
-<script>
-  // Available as global AudioChannelQueue
-  await AudioChannelQueue.queueAudio('./sounds/welcome.mp3');
-</script>
-```
-
-## TypeScript Configuration
-
-### Add Type Declarations for Audio Files
-
-If you're importing audio files directly, create a `custom.d.ts` file in your project root:
-
-```typescript title="custom.d.ts"
-declare module '*.mp3' {
-  const src: string;
-  export default src;
-}
-
-declare module '*.wav' {
-  const src: string;
-  export default src;
-}
-
-declare module '*.ogg' {
-  const src: string;
-  export default src;
-}
-
-declare module '*.m4a' {
-  const src: string;
-  export default src;
-}
-```
-
-### TypeScript Configuration
-
-Update your `tsconfig.json` to include type declarations:
-
-```json title="tsconfig.json"
-{
-  "compilerOptions": {
-    "target": "ES2020",
-    "lib": ["DOM", "DOM.Iterable"],
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
-  },
-  "include": [
-    "src/**/*",
-    "custom.d.ts"
-  ]
-}
-```
-
-## Audio File Preparation
-
-### Supported Formats
-
-AudioQ supports all formats that the browser's `HTMLAudioElement` supports:
-
-- **MP3** - Universal support, good compression
-- **WAV** - Uncompressed, high quality, larger files
-- **OGG** - Open source format, good compression
-- **M4A/AAC** - Good compression, widely supported
-- **WEBM** - Modern format, excellent compression
-
-### Format Recommendations
-
-| Use Case | Recommended Format | Why |
-|----------|-------------------|-----|
-| **Music/Background** | MP3 or M4A | Good compression, universal support |
-| **Short Sound Effects** | WAV | No compression artifacts, fast loading |
-| **Voice/Speech** | MP3 | Good compression for speech |
-| **Game Audio** | WAV or OGG | Low latency, good quality |
-
-## Build Tool Configuration
-
-### Webpack
-
-Audio files are typically handled by webpack's asset handling:
-
-```javascript title="webpack.config.js"
-module.exports = {
-  module: {
-    rules: [
-      {
-        test: /\.(mp3|wav|ogg|m4a)$/,
-        type: 'asset/resource',
-        generator: {
-          filename: 'audio/[name][ext]'
-        }
-      }
-    ]
-  }
-};
-```
-
-### Vite
-
-Vite handles audio files out of the box:
-
-```typescript title="vite.config.ts"
-import { defineConfig } from 'vite';
-
-export default defineConfig({
-  assetsInclude: ['**/*.mp3', '**/*.wav', '**/*.ogg', '**/*.m4a']
-});
-```
-
-### Create React App
-
-CRA handles audio files by default when imported:
-
-```typescript
-import welcomeSound from './audio/welcome.mp3';
-import { queueAudio } from 'audioq';
-
-// Use the imported path
-await queueAudio(welcomeSound);
-```
-
-## Verify Installation
-
-Create a simple test to verify everything is working:
-
-```typescript title="test-audio.ts"
-import { queueAudio, onAudioStart } from 'audioq';
-
-// Set up event listener
-onAudioStart(0, (info) => {
-  console.log('Audio started:', info.fileName);
-  console.log('Duration:', info.duration, 'ms');
-});
-
-// Test with a simple audio file
-export async function testAudio(): Promise<void> {
-  try {
-    await queueAudio('./audio/test-sound.mp3');
-    console.log('AudioQ is working!');
-  } catch (error) {
-    console.error('Error playing audio:', error);
-  }
-}
-
-// Call the test
-await testAudio();
-```
-
-## Troubleshooting Installation
-
-### Common Issues
-
-**"Module not found" error**
-```bash
-# Clear npm cache and reinstall
-npm cache clean --force
-rm -rf node_modules package-lock.json
-npm install
-```
-
-**TypeScript import errors**
-- Ensure you have the `custom.d.ts` file for audio imports
-- Check that TypeScript can find the module types
-
-**Audio files not loading**
-- Verify your build tool is configured to handle audio assets
-- Check that file paths are correct relative to your build output
-
-**Browser compatibility issues**
-- Verify you're using a [supported browser](./browser-compatibility)
-- Check the browser console for specific error messages
-
-### Getting Help
-
-If you're still having issues:
-
-1. Check the [troubleshooting guide](../migration/troubleshooting)
-2. Search [existing issues](https://github.com/tonycarpenter21/audioq/issues)
-3. Open a [new issue](https://github.com/tonycarpenter21/audioq/issues/new) with:
-   - Your environment details (OS, browser, Node.js version)
-   - Build tool configuration
-   - Error messages
-   - Minimal reproduction example
-
-## Next Steps
-
-Now that you have AudioQ installed, let's create your first audio queue:
-
-**[Quick Start Guide](./quick-start)** - Build your first audio application in 5 minutes 
+- Browsers from 2020 onwards: Chrome and Edge 80+, Firefox 74+, Safari 13.1+, and their mobile
+  versions. See [Browser Compatibility](browser-compatibility).
+- Developing AudioQ itself needs Node.js 20.19+, 22.13+ or 24+. Using it does not.

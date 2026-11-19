@@ -21,7 +21,7 @@ const sidebars: SidebarsConfig = {
         'getting-started/installation',
         'getting-started/quick-start',
         'getting-started/basic-usage',
-        // 'getting-started/react-integration', // TODO: Publish later
+        'getting-started/react-integration',
         'getting-started/browser-compatibility',
       ],
       label: 'Getting Started',
@@ -42,12 +42,16 @@ const sidebars: SidebarsConfig = {
         'api-reference/quick-reference',
         'api-reference/queue-management',
         'api-reference/advanced-queue-manipulation',
+        'api-reference/playback-controls',
+        'api-reference/sprites-and-cues',
         'api-reference/volume-control',
         'api-reference/volume-ducking',
         'api-reference/pause-resume',
         'api-reference/event-listeners',
         'api-reference/audio-information',
         'api-reference/error-handling',
+        'api-reference/media-session',
+        'api-reference/configuration',
         'api-reference/utilities',
         'api-reference/types-interfaces'
       ],
@@ -56,6 +60,7 @@ const sidebars: SidebarsConfig = {
     },
     {
       items: [
+        'migration/migrating-from-v2',
         'migration/troubleshooting',
       ],
       label: 'Migration & Help',

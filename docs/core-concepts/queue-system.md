@@ -1,270 +1,99 @@
-# Queue System
+---
+sidebar_position: 2
+title: The Queue
+description: How items are queued, played, preloaded and released
+---
 
-Understanding how audio queuing works within channels and how to manage playback order and timing.
+# The Queue
 
-## What is the Queue System?
+Each channel's queue is a list in play order. **Index 0 is the current item**; waiting items start
+at index 1.
 
-Each audio channel maintains its own **First-In-First-Out (FIFO)** queue that automatically manages audio playback order. When you queue audio, it gets added to the end of the channel's queue and plays when it's turn comes.
-
-```typescript
-import { queueAudio, queueAudioPriority, getQueueSnapshot } from 'audioq';
-
-// Queue multiple audio files - they play in order (using default channel 0)
-await queueAudio('./audio/track1.mp3');
-await queueAudio('./audio/track2.mp3');
-await queueAudio('./audio/track3.mp3');
-
-// Check the queue
-const snapshot = getQueueSnapshot();
-console.log(`Queue has ${snapshot.totalItems} items`);
-// Will play: track1 → track2 → track3
+```ts
+await queueAudio('/a.mp3'); // index 0, plays now
+await queueAudio('/b.mp3'); // index 1
+await queueAudio('/c.mp3', 0, { addToFront: true }); // goes to index 1, ahead of b
+console.log(getQueueSnapshot(0)?.items.map((item) => item.fileName)); // ['a.mp3', 'c.mp3', 'b.mp3']
 ```
 
-## Queue Behavior
+## What happens when you queue
 
-### Standard Queuing
+1. The source is checked: a non-empty URL string or a `Blob`/`File`, otherwise `TypeError`.
+2. Options are checked (`maxQueueSize`, `endAt`, `cues`), otherwise `RangeError`.
+3. With `dedupeMs`, a repeat of a recent source is skipped (the handle settles with `'skipped'`).
+4. With `interrupt`, the channel is cleared first.
+5. The queue limit is applied (see below).
+6. The item is added and `onQueueChange` fires. If the channel was idle, it starts playing.
 
-With `queueAudio()`, files are added to the end of the queue:
+The returned handle resolves right away:
 
-```typescript
-import { queueAudio, onAudioStart } from 'audioq';
-
-// Setup logging to see the order
-onAudioStart(0, (info) => {
-  console.log(`Now playing: ${info.fileName}`);
-});
-
-// Queue several tracks (using default channel 0)
-await queueAudio('./music/intro.mp3');        // Plays immediately
-await queueAudio('./music/main-theme.mp3');   // Plays after intro
-await queueAudio('./music/outro.mp3');        // Plays after main-theme
-
-// Order: intro → main-theme → outro
+```ts
+const item = await queueAudio('/voice/line.mp3', 2);
+console.log(item.id, item.src, item.channelNumber);
+await item.started; // true once playback starts, false if it never does
+await item.finished; // 'ended' | 'stopped' | 'error' | 'removed' | 'skipped'
 ```
 
-### Priority Queuing
+Both promises always settle, so awaiting them never hangs.
 
-With `queueAudioPriority()`, files interrupt current playback and jump to the front:
+## Preloading
 
-```typescript
-import { queueAudio, queueAudioPriority, stopCurrentAudioInChannel } from 'audioq';
+Only the current item and the next one (`prefetchCount`, default 1) get an audio element and start
+downloading. A 100-item playlist does not download 100 files. Items that move out of that window
+(after reordering or a priority insert) release their element again.
 
-// Start with background music (using default channel 0)
-await queueAudio('./music/background.mp3');
+## Limits
 
-// Urgent announcement interrupts immediately
-await queueAudioPriority('./voice/emergency-alert.mp3'); // This queues the next sound after the currently playing sound
-await stopCurrentAudioInChannel(); // This stops the currently playing sound
+A channel can be limited to a number of items (including the current one):
+
+```ts
+setQueueConfig({ defaultMaxQueueSize: 20 }); // every channel
+setChannelQueueLimit(3, 5); // channel 3
+await queueAudio('/sfx/ping.mp3', 3, { maxQueueSize: 2 }); // this call only
+setQueueConfig({ dropOldestWhenFull: true }); // drop the oldest waiting item instead of throwing
 ```
 
-## Queue States and Information
+When the limit is hit `queueAudio` rejects, unless `dropOldestWhenFull` is set. The current item
+is never dropped.
 
-### Queue Snapshots
+## Rearranging
 
-Get complete information about a channel's queue:
-
-```typescript
-import { getQueueSnapshot, QueueSnapshot } from 'audioq';
-
-function analyzeQueue(channel: number): void {
-  const snapshot: QueueSnapshot | null = channel === 0 ? getQueueSnapshot() : getQueueSnapshot(channel);
-  
-  if (!snapshot) {
-    console.log(`No queue found for channel ${channel}`);
-    return;
-  }
-  
-  console.log(`Channel ${channel} Queue Analysis:`);
-  console.log(`- Total items: ${snapshot.totalItems}`);
-  console.log(`- Current index: ${snapshot.currentIndex}`);
-  console.log(`- Is paused: ${snapshot.isPaused}`);
-  
-  if (snapshot.items.length > 0) {
-    console.log('\nQueue Items:');
-    snapshot.items.forEach((item, index: number) => {
-      const status = item.isCurrentlyPlaying ? '🔊 Playing' : '⏳ Queued';
-      const duration = Math.round(item.duration / 1000);
-      console.log(`  ${index + 1}. ${status} - ${item.fileName} (${duration}s)`);
-    });
-  }
-}
-
-// Use it - examples with both default and explicit channel
-analyzeQueue(0);  // Can use default: getQueueSnapshot()
-analyzeQueue(1);  // Must be explicit: getQueueSnapshot(1)
+```ts
+await reorderQueue(3, 1); // move item 3 to play next
+await swapQueueItems(1, 2);
+await removeQueuedItem(2);
+await shuffleQueue(0);
+await clearQueueAfterCurrent(0);
 ```
 
-### Real-time Queue Monitoring
+These return `{ success, error?, updatedQueue? }` and never throw. The current item (index 0)
+cannot be moved or removed; stop it instead.
 
-```typescript
-import { onQueueChange } from 'audioq';
+## Moving on
 
-class QueueMonitor {
-  setupQueueTracking(channel: number): void {
-    onQueueChange(channel, (snapshot) => {
-      console.log(`Queue changed on channel ${channel}:`);
-      console.log(`- Items: ${snapshot.totalItems}`);
-      console.log(`- Current index: ${snapshot.currentIndex}`);
-      
-      // React to queue events
-      if (snapshot.totalItems === 0) {
-        this.onQueueEmpty(channel);
-      } else if (snapshot.totalItems > 10) {
-        this.onQueueOverloaded(channel);
-      }
-    });
-  }
-  
-  onQueueEmpty(channel: number): void {
-    console.log(`Channel ${channel} queue is empty - maybe start background music?`);
-  }
-  
-  onQueueOverloaded(channel: number): void {
-    console.log(`Channel ${channel} queue is getting long - consider optimization`);
-  }
-}
+An item leaves the front of the queue when it:
+
+| Event                              | `reason`/outcome | Next item                               |
+| ---------------------------------- | ---------------- | --------------------------------------- |
+| plays to the end (or `endAt`)      | `'ended'`        | starts (after the gap, if one is set)   |
+| is skipped with `stopCurrentAudioInChannel` | `'stopped'` | starts                               |
+| fails to load or play              | `'error'`        | starts                                  |
+| is cleared by `stopAllAudioInChannel` or `interrupt` | `'stopped'` | -                           |
+
+If the channel is paused when an item ends or fails, the next item waits paused.
+
+## Repeating
+
+```ts
+setRepeatMode(0, 'one'); // replay the current item
+setRepeatMode(0, 'all'); // each finished item goes to the end of the queue
+setRepeatMode(0, 'off');
 ```
 
-## Queue Management Patterns
+`loop: true` on an item repeats just that item until it is stopped.
 
-### Playlist Management
+## Memory
 
-```typescript
-import { queueAudio, stopCurrentAudioInChannel, queueAudioPriority, onAudioComplete } from 'audioq';
-
-class PlaylistManager {
-  private playlist: string[] = [];
-  private currentIndex: number = 0;
-  private channel: number = 0;
-  
-  constructor(channel: number = 0) {
-    this.channel = channel;
-    this.setupEventHandlers();
-  }
-  
-  loadPlaylist(audioFiles: string[]): void {
-    this.playlist = [...audioFiles];
-    this.currentIndex = 0;
-  }
-  
-  async startPlaylist(): Promise<void> {
-    if (this.playlist.length === 0) return;
-    
-    // Queue all tracks
-    for (const track of this.playlist) {
-      await queueAudio(track, this.channel);
-    }
-  }
-  
-  async skipToNext(): Promise<void> {
-    // Stop current and play next
-    await stopCurrentAudioInChannel(this.channel);
-    
-    this.currentIndex++;
-    if (this.currentIndex < this.playlist.length) {
-      await queueAudioPriority(this.playlist[this.currentIndex], this.channel);
-    }
-  }
-  
-  async skipToPrevious(): Promise<void> {
-    this.currentIndex = Math.max(0, this.currentIndex - 1);
-    await stopCurrentAudioInChannel(this.channel);
-    await queueAudioPriority(this.playlist[this.currentIndex], this.channel);
-  }
-  
-  private setupEventHandlers(): void {
-    onAudioComplete(this.channel, (info) => {
-      console.log(`Completed: ${info.fileName}`);
-      
-      // Auto-advance playlist
-      if (info.remainingInQueue === 0 && this.currentIndex < this.playlist.length - 1) {
-        this.skipToNext();
-      }
-    });
-  }
-}
-
-// Usage
-const musicPlayer = new PlaylistManager(0);
-musicPlayer.loadPlaylist([
-  './music/track1.mp3',
-  './music/track2.mp3', 
-  './music/track3.mp3'
-]);
-await musicPlayer.startPlaylist();
-```
-
-### Dynamic Content Insertion
-
-```typescript
-import { queueAudio, queueAudioPriority, pauseChannel, resumeChannel, onAudioComplete } from 'audioq';
-
-class DynamicContentManager {
-  private baseChannel: number = 0;
-  private adChannel: number = 1;
-  
-  async startMainContent(contentUrl: string): Promise<void> {
-    await queueAudio(contentUrl, this.baseChannel);
-  }
-  
-  async insertAd(adUrl: string, returnToContent: boolean = true): Promise<void> {
-    // Pause main content
-    await pauseChannel(this.baseChannel);
-    
-    // Play ad on separate channel
-    await queueAudioPriority(adUrl, this.adChannel);
-    
-    if (returnToContent) {
-      // Resume main content when ad finishes
-      onAudioComplete(this.adChannel, () => {
-        resumeChannel(this.baseChannel);
-      });
-    }
-  }
-}
-```
-
-## Common Queue Patterns
-
-### Gaming Audio Queues
-
-```typescript
-import { queueAudio, queueAudioPriority, stopCurrentAudioInChannel } from 'audioq';
-
-class GameAudioQueue {
-  private musicChannel: number = 0;
-  private sfxChannel: number = 1;
-  private voiceChannel: number = 2;
-  
-  async playGameSequence(): Promise<void> {
-    // Background music (looped)
-    await queueAudio('./music/game-theme.mp3', this.musicChannel, { 
-      loop: true, 
-      volume: 0.4 
-    });
-    
-    // Immediate sound effects
-    await queueAudio('./sfx/sword-swing.wav', this.sfxChannel);
-    await queueAudio('./sfx/hit-impact.wav', this.sfxChannel);
-    
-    // Character dialog (interrupts other voice)
-    await queueAudioPriority('./voice/victory-shout.mp3', this.voiceChannel);
-    await stopCurrentAudioInChannel(this.voiceChannel);
-  }
-  
-  async handleEmergency(): Promise<void> {
-    // Stop everything and play alert
-    await stopCurrentAudioInChannel(this.musicChannel);
-    await stopCurrentAudioInChannel(this.sfxChannel);
-    await queueAudioPriority('./alerts/game-over.mp3', this.voiceChannel);
-  }
-}
-```
-
-## Next Steps
-
-Now that you understand the queue system, explore:
-
-- **[Event System](./event-system.md)** - React to queue and playback events
-- **[Audio Lifecycle](./audio-lifecycle.md)** - Complete audio playback flow  
-- **[API Reference](../api-reference/queue-management.md)** - Detailed function documentation 
+Finished, stopped and removed items release their audio element, network request, Web Audio
+nodes, listeners and timers, and `Blob` object URLs are revoked. Nothing accumulates in long
+sessions; only the last `historySize` history entries (default 20) are kept.

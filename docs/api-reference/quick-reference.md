@@ -61,6 +61,8 @@ arguments default to 0 where shown with `?`.
 | `getChannelVolume(channel?)` / `getAllChannelsVolume()` | Read volumes                |
 | `setAllChannelsVolume(volume)`                         | Every channel                |
 | `setGlobalVolume(volume)` / `getGlobalVolume()`        | Master volume                |
+| `setMuted(muted)` / `isMuted()`                        | Mute everything              |
+| `setChannelMuted(channel, muted)` / `isChannelMuted(channel?)` | Mute one channel     |
 | `setVolumeDucking(config)` / `clearVolumeDucking()`    | Duck under a priority channel |
 
 ## Events

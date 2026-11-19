@@ -64,6 +64,26 @@ getGlobalVolume(): number
 
 A master volume that multiplies every channel. `destroyAllChannels()` resets it to 1.
 
+## Muting
+
+```ts signature
+setMuted(muted: boolean): void
+isMuted(): boolean
+setChannelMuted(channelNumber: number, muted: boolean): void
+isChannelMuted(channelNumber?: number): boolean
+```
+
+Muting keeps every volume, so unmuting restores the mix exactly. Audio keeps playing while muted
+(use pausing to stop it). Muting is instant; a crossfade's fading tail goes silent too.
+
+```ts
+setMuted(!isMuted()); // a mute button for everything
+setChannelMuted(0, true); // just the music
+console.log(isChannelMuted(0), getChannelVolume(0)); // true, and the volume is unchanged
+```
+
+`getCurrentAudioInfo().volume` reports 0 while muted. `destroyAllChannels()` unmutes.
+
 ## iOS
 
 iOS ignores the audio element's volume. AudioQ routes same-origin audio through the Web Audio API

@@ -79,9 +79,16 @@ Audio API there.
 
 | `webAudio`      | Behaviour                                                                   |
 | --------------- | --------------------------------------------------------------------------- |
-| `'auto'`        | On iOS, route same-origin audio through Web Audio. Elsewhere, do not.       |
+| `'auto'`        | On iOS, route a sound while its volume is between 0 and 1. Elsewhere, do not. |
 | `'force'`       | Route everywhere (same-origin or CORS audio).                               |
 | `'off'`         | Never use Web Audio.                                                        |
+
+In `'auto'` mode, audio at full volume stays native on iOS on purpose. iOS has long-standing bugs
+with audio routed through Web Audio: it stops when the phone locks (the lock-screen controls
+appear but play is silent), and pausing and resuming can replay audio from an earlier point.
+So a podcast or music player that leaves volume alone keeps lock-screen and background playback,
+while a game that sets volumes gets them. Muting uses the element's `muted` flag, which iOS
+honours, so it needs no routing. Panning and `getChannelAnalyser` route on every platform.
 
 Web Audio can only read audio from another origin if the server sends CORS headers and the item
 is queued with `crossOrigin: 'anonymous'`. Without that, AudioQ plays the file normally (at full

@@ -135,5 +135,7 @@ when `webAudio` is `'off'` or the browser has no Web Audio.
 
 ## iOS
 
-iOS ignores the audio element's volume. AudioQ routes same-origin audio through the Web Audio API
-there so all of the above works; see [iOS and Web Audio](configuration#ios-and-web-audio).
+iOS ignores the audio element's volume. AudioQ routes a sound through the Web Audio API there while
+its volume is between silent and full, so all of the above works; full-volume audio stays native
+so lock-screen and background playback keep working. See
+[iOS and Web Audio](configuration#ios-and-web-audio).

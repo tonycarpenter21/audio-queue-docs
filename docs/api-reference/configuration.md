@@ -90,6 +90,10 @@ So a podcast or music player that leaves volume alone keeps lock-screen and back
 while a game that sets volumes gets them. Muting uses the element's `muted` flag, which iOS
 honours, so it needs no routing. Panning and `getChannelAnalyser` route on every platform.
 
+iOS also only lets an audio element play without a tap if it has played before, so a sound that
+starts when the previous one ends can be refused. AudioQ keeps a few elements that have played and,
+when iOS refuses an item, moves it onto one of them and retries, so queues keep going.
+
 Web Audio can only read audio from another origin if the server sends CORS headers and the item
 is queued with `crossOrigin: 'anonymous'`. Without that, AudioQ plays the file normally (at full
 volume on iOS) rather than routing it into silence.

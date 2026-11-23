@@ -5,6 +5,8 @@
 /build
 
 # Generated files
+/static/llms.txt
+/static/llms-full.txt
 .docusaurus
 .cache-loader
 

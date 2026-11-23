@@ -4,7 +4,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
   title: 'AudioQ',
-  tagline: 'Multi-channel audio queue management for browsers',
+  tagline: 'Queue audio in the browser: channels, playlists, sprites, captions and lock-screen controls',
   favicon: 'img/favicon.svg',
 
   // Set the production url of your site here
@@ -48,6 +48,18 @@ const config: Config = {
   ],
 
   themeConfig: {
+    metadata: [
+      {
+        content:
+          'audio queue, javascript audio, typescript audio library, web audio, playlist, audio sprite, sound effects, ducking, crossfade, captions, webvtt, media session, lock screen, ios audio, autoplay',
+        name: 'keywords'
+      },
+      {
+        content:
+          'AudioQ: a zero-dependency TypeScript library for queueing audio in the browser, with channels, playlists, sprites, captions, ducking, crossfades and lock-screen controls.',
+        name: 'description'
+      }
+    ],
     colorMode: {
       defaultMode: 'dark',
       disableSwitch: false,
@@ -113,6 +125,10 @@ const config: Config = {
             {
               label: 'GitHub Repository',
               href: 'https://github.com/tonycarpenter21/audioq',
+            },
+            {
+              label: 'llms.txt (for AI assistants)',
+              href: 'pathname:///llms.txt',
             },
           ],
         },

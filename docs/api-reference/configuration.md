@@ -27,7 +27,7 @@ console.log(getQueueConfig().prefetchCount);
 | `logger`              | `console` | Where warnings and listener errors go; `null` silences the library. |
 | `maxChannels`         | `64`      | Number of channels.                                                 |
 | `pauseWhenHidden`     | `false`   | Pause while the page is hidden; resume when it is visible.          |
-| `prefetchCount`       | `1`       | Waiting items preloaded ahead of the current one.                   |
+| `prefetchCount`       | `1`       | Waiting items preloaded ahead of the current one (not on iOS).      |
 | `showQueueWarnings`   | `true`    | Warn when a queue limit is reached.                                 |
 | `webAudio`            | `'auto'`  | When to use Web Audio: `'auto'`, `'force'` or `'off'`.              |
 
@@ -96,7 +96,10 @@ honours, so it needs no routing. Panning and `getChannelAnalyser` route on every
 
 iOS also only lets an audio element play without a tap if it has played before, so a sound that
 starts when the previous one ends can be refused. AudioQ keeps a few elements that have played and,
-when iOS refuses an item, moves it onto one of them and retries, so queues keep going.
+when iOS refuses an item, moves it onto one of them and retries, so queues keep going. Upcoming
+items are not preloaded on iOS (`prefetchCount` is ignored there): an element that loads in the
+background while another one plays can report that it is playing and never advance, so each
+item's element is created when its turn comes.
 
 Web Audio can only read audio from another origin if the server sends CORS headers and the item
 is queued with `crossOrigin: 'anonymous'`. Without that, AudioQ plays the file normally (at full

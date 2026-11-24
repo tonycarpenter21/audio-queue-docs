@@ -40,7 +40,9 @@ Both promises always settle, so awaiting them never hangs.
 
 Only the current item and the next one (`prefetchCount`, default 1) get an audio element and start
 downloading. A 100-item playlist does not download 100 files. Items that move out of that window
-(after reordering or a priority insert) release their element again.
+(after reordering or a priority insert) release their element again. On iOS nothing is preloaded:
+each item's element is created when its turn comes, because iOS can stall an element that loaded
+in the background (see [iOS and Web Audio](../api-reference/configuration.md#ios-and-web-audio)).
 
 ## Limits
 

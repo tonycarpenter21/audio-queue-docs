@@ -65,6 +65,8 @@ const summary = [
   'Install with `npm install audioq`. Every function is a named export: `import { queueAudio } from',
   "'audioq'`. Channels are numbers (0 by default); sounds on one channel never overlap, sounds on",
   'different channels play together. Times are in milliseconds and volumes from 0 to 1.',
+  'For independent queues, `import { createAudioQueue, queueAudio } from',
+  "'audioq/queue'`: the same functions, with the queue as the first argument.",
   '',
   ...[...sections].flatMap(([section, list]) => [
     `## ${SECTION_TITLES[section] ?? section}`,

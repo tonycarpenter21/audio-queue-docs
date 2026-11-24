@@ -23,7 +23,8 @@ The package ships both ES modules and CommonJS, and bundlers pick the right one 
 It is marked side-effect free, so bundlers drop the parts you do not import.
 
 ```ts
-import { queueAudio, createAudioQueue, FadeType } from 'audioq';
+import { queueAudio, FadeType } from 'audioq';
+import { createAudioQueue } from 'audioq/queue'; // independent queues, used queue-first
 ```
 
 ```bash

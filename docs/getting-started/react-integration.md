@@ -102,11 +102,12 @@ useEffect(() => {
 ## One queue per component tree
 
 The top-level functions share one default queue. For an isolated player (or in tests), create a
-queue and pass it down through context:
+queue, pass it down through context, and call the functions of `audioq/queue` with it
+(`queueAudio(useAudioQueue(), '/a.mp3')`):
 
 ```tsx
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
-import { createAudioQueue, type AudioQueue } from 'audioq';
+import { createAudioQueue, type AudioQueue } from 'audioq/queue';
 
 const QueueContext = createContext<AudioQueue | null>(null);
 

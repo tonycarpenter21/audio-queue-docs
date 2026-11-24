@@ -6,8 +6,9 @@ description: Every AudioQ function on one page
 
 # Quick Reference
 
-Every top-level function is also a method on queues made with `createAudioQueue()`. Channel
-arguments default to 0 where shown with `?`.
+Every top-level function has a twin in `audioq/queue` that takes a queue made with
+`createAudioQueue()` as its first argument: `queueAudio(queue, '/a.mp3')`. Channel arguments
+default to 0 where shown with `?`.
 
 ## Queueing
 

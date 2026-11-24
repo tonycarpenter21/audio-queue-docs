@@ -56,8 +56,8 @@ onAudioComplete(1, (info) => console.log(`${info.fileName} finished (${info.reas
 - **Sprites, cues and captions**, timed precisely rather than at the browser's 4-per-second updates.
 - **Lock-screen controls** through the Media Session API.
 - **Safe for server-side rendering**: importing has no side effects.
-- **Two styles**: top-level functions for the common case, `createAudioQueue()` for independent
-  queues and tests.
+- **Two styles**: top-level functions for the common case, and `audioq/queue` (the same functions,
+  queue first) for independent queues and tests.
 
 ## Next steps
 

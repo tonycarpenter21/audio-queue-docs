@@ -65,11 +65,14 @@ All three take effect immediately, even without `await`.
 ## Several independent queues
 
 The top-level functions all use one shared default queue. `createAudioQueue()` makes another with
-its own channels and configuration, for embedded widgets, multiple players, or tests:
+its own channels and configuration, for embedded widgets, multiple players, or tests. Use it with
+the functions of `audioq/queue`, which take the queue as their first argument:
 
 ```ts
+import { createAudioQueue, queueAudio } from 'audioq/queue';
+
 const ui = createAudioQueue({ defaultMaxQueueSize: 3, dropOldestWhenFull: true });
 const player = createAudioQueue({ historySize: 100, pauseWhenHidden: true });
-await ui.queueAudio('/sfx/click.mp3');
-await player.queueAudio('/music/track-1.mp3');
+await queueAudio(ui, '/sfx/click.mp3');
+await queueAudio(player, '/music/track-1.mp3');
 ```

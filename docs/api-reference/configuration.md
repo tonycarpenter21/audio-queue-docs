@@ -57,17 +57,21 @@ getDefaultAudioQueue(): AudioQueue
 ```
 
 The top-level functions use a default queue, created on first use. `createAudioQueue` makes
-another one with its own channels, listeners and configuration; every top-level function is a
-method on it.
+another one with its own channels, listeners and configuration. Every top-level function has a
+twin in `audioq/queue` with the same name that takes the queue as its first argument:
 
 ```ts
+import { createAudioQueue, onAudioError, queueAudio, setQueueConfig } from 'audioq/queue';
+
 const ui = createAudioQueue({ defaultMaxQueueSize: 3, dropOldestWhenFull: true, logger: null });
-await ui.queueAudio('/sfx/click.mp3');
-ui.onAudioError(0, (error) => console.warn(error.errorType));
+await queueAudio(ui, '/sfx/click.mp3');
+onAudioError(ui, 0, (error) => console.warn(error.errorType));
 
 const shared = getDefaultAudioQueue(); // the queue behind queueAudio(), pauseChannel(), ...
-shared.setQueueConfig({ historySize: 50 });
+setQueueConfig(shared, { historySize: 50 });
 ```
+
+A queue is an opaque value with no methods, so your bundler keeps only the functions you import.
 
 Separate queues are handy for embedded widgets, multiple players on a page, and tests (each test
 can create its own queue).

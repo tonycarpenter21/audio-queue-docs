@@ -89,7 +89,9 @@ Audio API there.
 
 In `'auto'` mode, audio at full volume stays native on iOS on purpose. iOS has long-standing bugs
 with audio routed through Web Audio: it stops when the phone locks (the lock-screen controls
-appear but play is silent), and pausing and resuming can replay audio from an earlier point.
+appear but play is silent). Resuming a paused element is unreliable on iOS too: it skips about
+half a second, or replays buffered audio when routed, so on iOS AudioQ resumes by reloading the
+element and seeking back to the paused position.
 So a podcast or music player that leaves volume alone keeps lock-screen and background playback,
 while a game that sets volumes gets them. Muting uses the element's `muted` flag, which iOS
 honours, so it needs no routing. Panning and `getChannelAnalyser` route on every platform.
